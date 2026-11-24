@@ -1,0 +1,2589 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>音樂班高階旋律視唱與聽寫訓練系統（學生版）</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vexflow@4.2.5/build/cjs/vexflow.js"></script>
+<style>
+:root{
+  --bg:#faf3e6;
+  --dot:#dccdb4;
+  --fg:#3b3127;
+  --card:#fffdf8;
+  --ac:#c86432;
+  --ac2:#3568b8;
+  --bd:#e2d1b7;
+  --shadow-lip:#dccab0;
+  --muted:#786a59;
+  --ok:#247a48;
+  --bad:#d93829;
+  --warn:#d47a17;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:inherit}
+body{
+  background-color:var(--bg);
+  background-image:
+    radial-gradient(var(--dot) 1.3px, transparent 1.3px),
+    radial-gradient(rgba(224,205,176,.45) 1px, transparent 1px);
+  background-size:22px 22px;
+  background-position:0 0, 11px 11px;
+  color:var(--fg);
+  font-family:"Rounded Mplus 1c","Hiragino Maru Gothic ProN","Noto Sans TC","PingFang TC",system-ui,-apple-system,sans-serif;
+  margin:0;
+  padding:20px 18px 32px;
+  line-height:1.55;
+  overflow-x:hidden;
+}
+
+/* 音樂筆記本卡片基底（方正對齊、統一圓角） */
+.sticker-card{
+  position:relative;
+  background:var(--card);
+  border:2px solid var(--bd);
+  border-radius:16px;
+  box-shadow:
+    0 0 0 3px #fffdf8,
+    0 4px 0 var(--shadow-lip),
+    0 8px 18px rgba(105,78,46,.08);
+}
+
+/* 手撕鋸齒邊緣和紙膠帶（斜角貼法） */
+.washi{
+  position:absolute;
+  height:20px;
+  width:84px;
+  pointer-events:none;
+  z-index:4;
+  opacity:.88;
+  box-shadow:0 2px 3px rgba(85,62,34,.12);
+  clip-path:polygon(
+    3% 0%, 97% 0%,
+    100% 14%, 96% 29%, 100% 45%, 97% 62%, 100% 79%, 96% 100%,
+    3% 100%,
+    0% 82%, 4% 66%, 0% 48%, 3% 31%, 0% 15%
+  );
+}
+.washi.corner-tl{
+  top:-6px;
+  left:-16px;
+  transform:rotate(-34deg);
+  background:repeating-linear-gradient(45deg,rgba(244,172,178,.82),rgba(244,172,178,.82) 6px,rgba(253,222,225,.88) 6px,rgba(253,222,225,.88) 12px);
+}
+.washi.corner-tr{
+  top:-4px;
+  right:-14px;
+  transform:rotate(31deg);
+  background:repeating-linear-gradient(-45deg,rgba(167,215,189,.82),rgba(167,215,189,.82) 6px,rgba(219,243,229,.88) 6px,rgba(219,243,229,.88) 12px);
+}
+.washi.top-tilt{
+  top:-10px;
+  left:46%;
+  width:92px;
+  transform:rotate(-4.5deg);
+  background:radial-gradient(rgba(255,255,255,.7) 2.2px, transparent 2.2px), rgba(245,205,121,.84);
+  background-size:10px 10px;
+}
+.washi.gingham{
+  top:-8px;
+  left:26px;
+  width:88px;
+  transform:rotate(3.6deg);
+  background-color:rgba(218,233,252,.85);
+  background-image:
+    linear-gradient(90deg, rgba(154,193,242,.55) 50%, transparent 50%),
+    linear-gradient(rgba(154,193,242,.55) 50%, transparent 50%);
+  background-size:12px 12px;
+}
+.washi.kraft{
+  top:-9px;
+  right:42px;
+  width:78px;
+  transform:rotate(-5.2deg);
+  background:repeating-linear-gradient(90deg,rgba(214,180,136,.82),rgba(214,180,136,.82) 4px,rgba(228,198,158,.86) 4px,rgba(228,198,158,.86) 8px);
+}
+
+/* 邊角插畫模切小貼紙 */
+.doodle-sticker{
+  position:absolute;
+  pointer-events:none;
+  z-index:5;
+  filter:drop-shadow(0 2px 2px rgba(90,65,35,.16));
+}
+
+header{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  padding:15px 20px;
+  margin-bottom:15px;
+}
+.title-wrap{display:flex;align-items:center;gap:12px}
+.title-sticker{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:44px;height:44px;
+  border-radius:13px;
+  background:#ffedd5;border:2px solid #f5c38e;
+  box-shadow:0 0 0 2.5px #fffdf8, 0 3px 0 #ebd0ad;
+  font-size:1.4rem;flex-shrink:0;
+}
+h1{font-size:1.22rem;margin:0;letter-spacing:.03em;color:#4a3520;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.student-pill{
+  display:inline-block;
+  font-size:.76rem;
+  font-weight:800;
+  padding:2px 9px;
+  border-radius:999px;
+  background:#e6f4ea;
+  color:#236b3e;
+  border:1.5px solid #9fd1b0;
+}
+.subtitle{font-size:.83rem;color:var(--muted);margin-top:2px}
+
+.bar{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  align-items:center;
+  padding:11px 16px;
+  margin-bottom:13px;
+}
+.group{display:inline-flex;align-items:center;gap:7px;flex-wrap:wrap}
+
+/* 貼紙感按鈕 */
+button{
+  background:var(--ac);
+  color:#fff;
+  border:2px solid #a84d20;
+  border-radius:11px;
+  padding:7px 14px;
+  font-size:.9rem;
+  font-weight:700;
+  cursor:pointer;
+  box-shadow:0 3px 0 #9e471c;
+  transition:transform .08s, filter .15s;
+}
+button:hover{filter:brightness(1.04);transform:translateY(-1px)}
+button:active{transform:translateY(2px);box-shadow:0 1px 0 #9e471c}
+button:disabled{opacity:.48;cursor:not-allowed;transform:none}
+
+button.secondary{
+  background:#fffaf0;
+  color:#6b4423;
+  border:2px dashed #cbb596;
+  border-radius:11px;
+  box-shadow:0 3px 0 #e2d3bc;
+}
+button.secondary:active{box-shadow:0 1px 0 #e2d3bc}
+
+button.primary-blue{
+  background:#3b73c4;
+  border-color:#295699;
+  box-shadow:0 3px 0 #234b87;
+}
+button.primary-blue:active{box-shadow:0 1px 0 #234b87}
+
+button.cadence-btn{
+  background:#8b5cf6;
+  border-color:#6d3fd6;
+  box-shadow:0 3px 0 #5b32ba;
+}
+button.cadence-btn:active{box-shadow:0 1px 0 #5b32ba}
+
+button.success{
+  background:#2d8a54;
+  border-color:#1e663c;
+  box-shadow:0 3px 0 #1a5934;
+}
+button.success:active{box-shadow:0 1px 0 #1a5934}
+
+select,input[type="range"],input[type="checkbox"],input[type="radio"]{accent-color:var(--ac)}
+select{
+  background:#fffcf5;
+  color:var(--fg);
+  border:2px solid #decbb0;
+  border-radius:10px;
+  padding:6px 10px;
+  font-size:.88rem;
+  font-weight:600;
+  cursor:pointer;
+  box-shadow:inset 0 1px 2px rgba(0,0,0,.04);
+}
+label{font-size:.89rem;cursor:pointer;display:inline-flex;align-items:center;gap:5px;font-weight:600}
+
+.mode-pill{
+  padding:5px 12px;
+  border-radius:11px;
+  background:#fbf5e8;
+  border:1.5px solid #dfd0b8;
+  transition:background .15s, border-color .15s;
+}
+.mode-pill:has(input:checked){
+  background:#ffedd5;
+  border-color:#e59a54;
+  color:#7c3814;
+  box-shadow:0 2px 0 #ebd0ad;
+}
+
+.toggle-analysis{
+  padding:5px 12px;
+  border-radius:11px;
+  font-weight:700;
+  background:#f2f7f1;
+  border:2px dashed #9ec4a4;
+  color:#27633b;
+}
+
+.badge{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  padding:5px 13px;
+  border-radius:999px;
+  font-size:.84rem;
+  font-weight:700;
+  background:#fff3e0;
+  color:#8c471c;
+  border:2px solid #f0cba0;
+  box-shadow:0 0 0 2px #fffdf8, 0 2px 0 #ebd4b7;
+}
+.badge.count{
+  background:#eef4ff;
+  color:#2b5ba8;
+  border-color:#bfd4f7;
+  box-shadow:0 0 0 2px #fffdf8, 0 2px 0 #cdddf7;
+}
+.pending-hint{
+  font-size:.82rem;
+  color:#b45309;
+  background:#fef3c7;
+  border:1.5px dashed #f59e0b;
+  padding:4px 12px;
+  border-radius:999px;
+  font-weight:700;
+}
+
+/* 批閱成績與印章橫幅 */
+.stamp-banner{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  padding:12px 18px;
+  margin-bottom:13px;
+  background:#fffcf4;
+  border:2px dashed #d8c3a3;
+  border-radius:16px;
+  box-shadow:0 4px 12px rgba(105,78,46,.08);
+}
+.stamp-banner[hidden]{display:none}
+.stamp-banner.all-ok{
+  background:linear-gradient(135deg,#fff9f7 0%,#fffdf6 100%);
+  border-color:#f0a8a0;
+}
+.stamp-banner.has-err{
+  background:linear-gradient(135deg,#f5f9ff 0%,#fffdf6 100%);
+  border-color:#a8c5f0;
+}
+.stamp-info h3{margin:0 0 4px;font-size:1.05rem}
+.stamp-banner.all-ok .stamp-info h3{color:#c92a1d}
+.stamp-banner.has-err .stamp-info h3{color:#2357a8}
+.stamp-info p{margin:0;font-size:.9rem;color:#57493a;font-weight:600}
+.stamp-visual-box{
+  flex-shrink:0;
+  transform:rotate(-7deg);
+  animation:stampSlam .42s cubic-bezier(.18,.89,.32,1.28) both;
+}
+
+@keyframes stampSlam{
+  0%{opacity:0;transform:scale(1.85) rotate(-20deg)}
+  65%{opacity:1;transform:scale(.94) rotate(-6deg)}
+  100%{opacity:1;transform:scale(1) rotate(-8deg)}
+}
+
+/* 五線譜手帳多層拼貼底紙 */
+.paper-outer{
+  position:relative;
+  margin-top:8px;
+  margin-bottom:16px;
+}
+.paper-outer::before{
+  content:"";
+  position:absolute;
+  inset:2px -3px -4px 4px;
+  background:#ebd9bd;
+  border:1.5px dashed #cbb18b;
+  border-radius:16px;
+  transform:rotate(-0.5deg);
+  z-index:0;
+  pointer-events:none;
+}
+.paper-outer::after{
+  content:"";
+  position:absolute;
+  inset:-2px 4px 2px -3px;
+  background:#f6ebd7;
+  border:1.5px solid #dfd0b8;
+  border-radius:16px;
+  transform:rotate(0.4deg);
+  z-index:0;
+  pointer-events:none;
+}
+.paper{
+  position:relative;
+  z-index:1;
+  background:#fffef9;
+  background-image:linear-gradient(to bottom, rgba(226,214,194,.22) 1px, transparent 1px);
+  background-size:100% 24px;
+  color:#1f1c18;
+  border:2px solid #dfd0b8;
+  border-radius:16px;
+  overflow-x:auto;
+  width:100%;
+  box-shadow:0 6px 16px rgba(95,70,42,.1);
+}
+#wrap{position:relative;user-select:none;margin:0 auto}
+#ov{position:absolute;inset:0;pointer-events:none}
+
+/* 手帳小節標籤貼紙 */
+.bar-tag{
+  position:absolute;
+  padding:1px 7px;
+  font-size:11px;
+  font-weight:800;
+  color:#7a5230;
+  background:#f7ebd4;
+  border:1px solid #dec7a1;
+  border-radius:6px 4px 7px 5px;
+  box-shadow:0 1px 2px rgba(90,65,35,.12);
+  pointer-events:none;
+  user-select:none;
+}
+.bar-tag.alt{
+  background:#fce8e4;
+  border-color:#ebb8ae;
+}
+
+/* 蓋在五線譜右下角的油墨印章 */
+#scoreStampOverlay{
+  position:absolute;
+  right:24px;
+  bottom:14px;
+  pointer-events:none;
+  z-index:4;
+  mix-blend-mode:multiply;
+  transform:rotate(-10deg);
+  animation:stampSlam .45s cubic-bezier(.18,.89,.32,1.28) both;
+}
+#scoreStampOverlay[hidden]{display:none}
+
+/* 音符點擊感應區與狀態標記 */
+.nh-hit{
+  position:absolute;width:28px;height:28px;margin-left:-14px;margin-top:-14px;
+  border-radius:50%;pointer-events:auto;cursor:pointer;
+  transition:background .12s,transform .1s;
+}
+.nh-hit:hover{background:rgba(53,104,184,.16)}
+.nh-hit.playing{
+  background:rgba(245,158,11,.38)!important;
+  outline:2.5px solid #d97706;
+  transform:scale(1.14);
+}
+.nh-hit.user-sel{
+  background:rgba(217,56,41,.16);
+  outline:2.5px solid #d93829;
+}
+.nh-hit.res-caught{
+  background:rgba(36,122,72,.18);
+  outline:3px solid #247a48;
+  border-radius:50%;
+}
+.nh-hit.res-caught::after{
+  content:"✓";position:absolute;top:-17px;left:50%;transform:translateX(-50%);
+  background:#247a48;color:#fff;font-size:10px;font-weight:800;
+  padding:0 5px;border-radius:6px;line-height:15px;box-shadow:0 1px 2px rgba(0,0,0,.15);
+}
+.nh-hit.res-missed{
+  background:rgba(217,56,41,.16);
+  outline:3px solid #d93829;
+  border-radius:6px;
+}
+.nh-hit.res-missed::after{
+  content:"漏抓";position:absolute;top:-18px;left:50%;transform:translateX(-50%);
+  background:#d93829;color:#fff;font-size:10px;font-weight:800;
+  padding:0 5px;border-radius:6px;line-height:15px;white-space:nowrap;box-shadow:0 1px 2px rgba(0,0,0,.15);
+}
+.nh-hit.res-false{
+  background:rgba(212,122,23,.16);
+  outline:2.5px dashed #d47a17;
+  border-radius:50%;
+}
+.nh-hit.res-false::before{
+  content:"";position:absolute;left:2px;right:2px;top:50%;height:2.5px;
+  background:#d47a17;transform:rotate(-22deg);
+}
+.nh-hit.res-false::after{
+  content:"誤判";position:absolute;top:-18px;left:50%;transform:translateX(-50%);
+  background:#d47a17;color:#fff;font-size:10px;font-weight:800;
+  padding:0 5px;border-radius:6px;line-height:15px;white-space:nowrap;box-shadow:0 1px 2px rgba(0,0,0,.15);
+}
+
+.legend-row{display:flex;flex-wrap:wrap;gap:14px;align-items:center;font-size:.86rem}
+.dot{display:inline-block;width:12px;height:12px;border-radius:50%;vertical-align:middle;margin-right:4px}
+.dot.sel{border:2.5px solid #d93829;background:rgba(217,56,41,.16)}
+.dot.ok{border:2.5px solid #247a48;background:rgba(36,122,72,.18)}
+.dot.miss{border:2.5px solid #d93829;border-radius:3px;background:rgba(217,56,41,.16)}
+.dot.fal{border:2.5px dashed #d47a17;background:rgba(212,122,23,.16)}
+
+/* 解析筆記卡 */
+.analysis-card{
+  position:relative;
+  padding:16px 18px;
+  margin-top:16px;
+  font-size:.9rem;
+}
+.analysis-header{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px;
+}
+.analysis-card h2{font-size:1.04rem;margin:0;color:#7c441e}
+.meta-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:9px;margin-bottom:12px}
+.meta-item{
+  background:#fbf5e9;
+  border:1.5px dashed #d8c6a8;
+  border-radius:12px;
+  padding:8px 11px;
+}
+table{width:100%;border-collapse:collapse;font-size:.87rem;margin-top:6px;background:#fffef9}
+th,td{border:1.5px solid #e2d4be;padding:7px 9px;text-align:left;vertical-align:top}
+th{background:#f7ecda;font-weight:800;color:#5c3a1d}
+.tag{display:inline-block;padding:1px 7px;border-radius:6px;font-size:.78rem;font-weight:800;margin-right:5px}
+.tag.chr{background:#fee2e2;color:#991b1b;border:1px solid #fca5a5}
+.tag.nct{background:#e0e7ff;color:#1e40af;border:1px solid #a5b4fc}
+</style>
+</head>
+<body>
+
+<!-- SVG 橡皮圖章油墨質感濾鏡定義 -->
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <filter id="rubber-ink" x="-8%" y="-8%" width="116%" height="116%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" seed="7" result="noise"/>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="1.7" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+  </defs>
+</svg>
+
+<header class="sticker-card">
+  <span class="washi corner-tl"></span>
+  <span class="washi corner-tr"></span>
+  <svg class="doodle-sticker" style="right:14px;bottom:-14px;transform:rotate(12deg)" width="34" height="34" viewBox="0 0 36 36">
+    <circle cx="18" cy="18" r="15" fill="#fffdf8" stroke="#e4cfa8" stroke-width="2"/>
+    <path d="M16 23V11l8-2v12" fill="none" stroke="#c86432" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="13.5" cy="23.5" r="2.8" fill="#c86432"/>
+    <circle cx="21.5" cy="21.5" r="2.8" fill="#c86432"/>
+  </svg>
+  <div class="title-wrap">
+    <div class="title-sticker">📒</div>
+    <div>
+      <h1>音樂班高階旋律視唱與聽寫訓練系統 <span class="student-pill">學生自主練習版</span></h1>
+      <div class="subtitle">8 小節歌唱性動機模進旋律（基礎練習：附屬／借用與外音解決｜進階練習：增六／拿波里／轉調回原調）</div>
+    </div>
+  </div>
+  <div class="group">
+    <span class="badge" id="curMeta">🎵 目前題目：載入中…</span>
+    <span class="badge count" id="playCounter">🎧 已播放次數：0 次</span>
+  </div>
+</header>
+
+<!-- 第一列：出題設定 -->
+<div class="bar sticker-card bar-setup">
+  <span class="washi kraft"></span>
+  <button id="btnGen">🎲 生成新題目</button>
+  <div class="group">
+    <label>難度：
+      <select id="selDiff">
+        <option value="1">基礎練習（調性＋解決外音＋附屬和弦＋平行調借用）</option>
+        <option value="2">進階練習（增六和弦＋拿波里和弦＋轉調回原調）</option>
+      </select>
+    </label>
+    <label>譜號：
+      <select id="selClef">
+        <option value="treble">高音譜號（A3–C6）</option>
+        <option value="bass">低音譜號（C2–E4）</option>
+      </select>
+    </label>
+    <label>拍號：
+      <select id="selTime">
+        <option value="4/4">4/4 拍</option>
+        <option value="3/4">3/4 拍</option>
+        <option value="6/8">6/8 拍</option>
+        <option value="9/8">9/8 拍</option>
+      </select>
+    </label>
+    <label>調性：
+      <select id="selKey"></select>
+    </label>
+  </div>
+  <span class="pending-hint" id="pendingHint" hidden>📌 條件已變更，請按「生成新題目」套用</span>
+</div>
+
+<!-- 第二列：播放與音色控制（學生版不含音檔匯出） -->
+<div class="bar sticker-card bar-audio">
+  <div class="group">
+    <button id="btnCadence" class="cadence-btn" title="先聽本題調性的主和弦終止式定調">🎹 主和弦定調</button>
+    <button id="btnPlay" class="primary-blue">▶ 播放旋律</button>
+    <button id="btnPause" class="secondary">⏸ 暫停</button>
+    <button id="btnStop" class="secondary">⏹ 停止／從頭</button>
+  </div>
+  <div class="group">
+    <label>樂器音色：
+      <select id="selInst"></select>
+    </label>
+    <label>速度：
+      <input type="range" id="rngBpm" min="45" max="105" value="66">
+      <b id="lblBpm">66</b> BPM
+    </label>
+  </div>
+  <svg class="doodle-sticker" style="right:-10px;top:-12px;transform:rotate(14deg)" width="30" height="30" viewBox="0 0 32 32">
+    <path d="M16 3l3.6 7.8 8.4 1-6.2 5.8 1.6 8.4L16 21.8 8.6 26l1.6-8.4L4 11.8l8.4-1z" fill="#fde68a" stroke="#fffdf8" stroke-width="2.5" stroke-linejoin="round"/>
+  </svg>
+</div>
+
+<!-- 第三列：訓練模式、解析開關與聽音辨誤批閱列 -->
+<div class="bar sticker-card bar-mode">
+  <div class="group">
+    <label class="mode-pill"><input type="radio" name="mode" value="error" checked> <b>聽音辨誤模式</b>（找出譜面錯音）</label>
+    <label class="mode-pill"><input type="radio" name="mode" value="dictation"> <b>純聽寫模式</b>（示首小節與連結音）</label>
+    <label class="mode-pill"><input type="radio" name="mode" value="analysis"> <b>全樂譜呈現模式</b></label>
+  </div>
+  <div class="group">
+    <label class="toggle-analysis">
+      <input type="checkbox" id="chkShowAnalysis"> 📑 顯示樂曲結構、變化和弦與外音解析
+    </label>
+  </div>
+  <div class="group" id="errorControls">
+    <button id="btnClearSel" class="secondary">🧹 清除標記</button>
+    <button id="btnGrade" class="success">💮 送出批閱蓋章</button>
+    <button id="btnToggleInspect" class="secondary" hidden>切換檢視：測驗譜面 ／ 正確原譜</button>
+    <span id="gradeSummary" style="font-weight:700;font-size:.9rem;color:#5c4328"></span>
+  </div>
+  <div class="group" id="dictControls" hidden>
+    <button id="btnRevealDict" class="secondary">👁 顯示／隱藏正確全譜</button>
+  </div>
+</div>
+
+<!-- 批閱印章回饋橫幅 -->
+<div class="stamp-banner" id="gradeStampBanner" hidden>
+  <div class="stamp-info">
+    <h3 id="stampBannerTitle"></h3>
+    <p id="stampBannerDesc"></p>
+  </div>
+  <div class="stamp-visual-box" id="stampBannerSvg"></div>
+</div>
+
+<!-- 視覺圖例說明 -->
+<div class="bar sticker-card bar-legend legend-row" id="legendBar">
+  <span>🖍️ <b>操作提示：</b>聽到的音樂為<b>正確原曲</b>，請直接在下方五線譜點擊與聽覺不符的錯音（再點一次取消）。</span>
+  <span><i class="dot sel"></i>已標記疑似錯音</span>
+  <span><i class="dot ok"></i>抓對錯音</span>
+  <span><i class="dot miss"></i>漏抓錯音</span>
+  <span><i class="dot fal"></i>誤判正確音</span>
+</div>
+
+<!-- 五線譜手帳畫布 -->
+<div class="paper-outer">
+  <span class="washi gingham"></span>
+  <span class="washi top-tilt"></span>
+  <span class="washi corner-tr"></span>
+  <div class="paper" id="paperBox">
+    <div id="wrap">
+      <div id="score"></div>
+      <div id="ov"></div>
+      <div id="scoreStampOverlay" hidden></div>
+    </div>
+  </div>
+</div>
+
+<!-- 樂曲結構、變化和弦與外音解析區 -->
+<div class="analysis-card sticker-card" id="analysisCard" hidden>
+  <span class="washi corner-tl"></span>
+  <div class="analysis-header">
+    <h2>📑 樂曲結構、變化和弦與和聲外音解析筆記</h2>
+    <button id="btnCloseAnalysis" class="secondary" style="padding:4px 10px;font-size:.82rem">✕ 收合解析</button>
+  </div>
+  <div class="meta-grid" id="metaGrid"></div>
+  <table>
+    <thead>
+      <tr>
+        <th style="width:78px">小節</th>
+        <th style="width:290px">隱含和聲進行（逐拍）</th>
+        <th style="width:170px">樂句／動機功能</th>
+        <th>旋律和聲外音與變化音解決說明</th>
+      </tr>
+    </thead>
+    <tbody id="analysisBody"></tbody>
+  </table>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+const mod7 = x => ((x % 7) + 7) % 7;
+
+/* ==================== 0. 手帳橡皮印章 SVG 生成器 ==================== */
+function buildStampSVG(isAllCorrect, caught, totalWrong) {
+  if (isAllCorrect) {
+    return `
+      <svg width="146" height="146" viewBox="0 0 160 160" aria-label="好寶寶印章">
+        <g filter="url(#rubber-ink)">
+          <circle cx="80" cy="80" r="72" fill="rgba(217,56,41,0.06)" stroke="#d93829" stroke-width="4.5"/>
+          <circle cx="80" cy="80" r="64" fill="none" stroke="#d93829" stroke-width="1.8" stroke-dasharray="4 3"/>
+          <text x="80" y="34" text-anchor="middle" fill="#d93829" font-size="12.5" font-weight="900" letter-spacing="2">★ 聽音辨誤全對 ★</text>
+          <path d="M62 56 L68 45 L75 53 L80 42 L85 53 L92 45 L98 56 Z" fill="#d93829"/>
+          <rect x="44" y="61" width="72" height="38" rx="10" fill="none" stroke="#d93829" stroke-width="2.5"/>
+          <text x="80" y="88" text-anchor="middle" fill="#d93829" font-size="25" font-weight="900" letter-spacing="3">好寶寶</text>
+          <text x="80" y="116" text-anchor="middle" fill="#d93829" font-size="12" font-weight="800" letter-spacing="1.2">PERFECT ${caught}/${totalWrong}</text>
+          <text x="80" y="133" text-anchor="middle" fill="#d93829" font-size="11" font-weight="700">♫ 太棒了 ♫</text>
+        </g>
+      </svg>
+    `;
+  }
+  return `
+    <svg width="158" height="140" viewBox="0 0 172 152" aria-label="一起加油印章">
+      <g filter="url(#rubber-ink)">
+        <rect x="8" y="10" width="156" height="132" rx="22" fill="rgba(37,99,235,0.06)" stroke="#2563eb" stroke-width="4.5"/>
+        <rect x="15" y="17" width="142" height="118" rx="16" fill="none" stroke="#2563eb" stroke-width="1.8" stroke-dasharray="5 3"/>
+        <text x="86" y="38" text-anchor="middle" fill="#2563eb" font-size="12" font-weight="900" letter-spacing="1.5">♪ 再聽一次抓抓看 ♪</text>
+        <path d="M86 58 C86 48, 74 44, 72 52 C78 55, 83 56, 86 58 Z M86 58 C86 48, 98 44, 100 52 C94 55, 89 56, 86 58 Z" fill="#2563eb"/>
+        <line x1="86" y1="52" x2="86" y2="62" stroke="#2563eb" stroke-width="2.4" stroke-linecap="round"/>
+        <text x="86" y="92" text-anchor="middle" fill="#2563eb" font-size="25" font-weight="900" letter-spacing="2.5">一起加油</text>
+        <line x1="32" y1="101" x2="140" y2="101" stroke="#2563eb" stroke-width="2" stroke-linecap="round"/>
+        <text x="86" y="120" text-anchor="middle" fill="#2563eb" font-size="11.5" font-weight="800" letter-spacing="1">抓對 ${caught}/${totalWrong}・繼續挑戰！</text>
+      </g>
+    </svg>
+  `;
+}
+
+function playStampChime(isAllCorrect) {
+  try {
+    if (!window.Tone) return;
+    Tone.start().then(() => {
+      const s = new Tone.PolySynth(Tone.Synth, {
+        oscillator: { type: 'triangle' },
+        envelope: { attack: 0.01, decay: 0.25, sustain: 0.1, release: 0.4 }
+      }).toDestination();
+      s.volume.value = -8;
+      const now = Tone.now();
+      if (isAllCorrect) {
+        s.triggerAttackRelease('C5', '16n', now);
+        s.triggerAttackRelease('E5', '16n', now + 0.09);
+        s.triggerAttackRelease('G5', '16n', now + 0.18);
+        s.triggerAttackRelease('C6', '8n',  now + 0.27);
+      } else {
+        s.triggerAttackRelease('G4', '16n', now);
+        s.triggerAttackRelease('C5', '8n',  now + 0.12);
+      }
+      setTimeout(() => s.dispose(), 1200);
+    }).catch(() => {});
+  } catch (e) {}
+}
+
+/* ==================== 1. 調性、音域與記譜拼字系統 ==================== */
+const KEYS = [
+  {id:'CM', name:'C 大調', md:'M', tonicMidi:60, tl:0, sig:'C'},
+  {id:'GM', name:'G 大調', md:'M', tonicMidi:67, tl:4, sig:'G'},
+  {id:'DM', name:'D 大調', md:'M', tonicMidi:62, tl:1, sig:'D'},
+  {id:'AM', name:'A 大調', md:'M', tonicMidi:57, tl:5, sig:'A'},
+  {id:'EM', name:'E 大調', md:'M', tonicMidi:64, tl:2, sig:'E'},
+  {id:'FM', name:'F 大調', md:'M', tonicMidi:65, tl:3, sig:'F'},
+  {id:'BbM',name:'B♭ 大調',md:'M', tonicMidi:58, tl:6, sig:'Bb'},
+  {id:'EbM',name:'E♭ 大調',md:'M', tonicMidi:63, tl:2, sig:'Eb'},
+  {id:'AbM',name:'A♭ 大調',md:'M', tonicMidi:56, tl:5, sig:'Ab'},
+  {id:'am', name:'a 小調', md:'m', tonicMidi:57, tl:5, sig:'Am'},
+  {id:'em', name:'e 小調', md:'m', tonicMidi:64, tl:2, sig:'Em'},
+  {id:'bm', name:'b 小調', md:'m', tonicMidi:59, tl:6, sig:'Bm'},
+  {id:'f#m',name:'f♯ 小調',md:'m', tonicMidi:66, tl:3, sig:'F#m'},
+  {id:'dm', name:'d 小調', md:'m', tonicMidi:62, tl:1, sig:'Dm'},
+  {id:'gm', name:'g 小調', md:'m', tonicMidi:67, tl:4, sig:'Gm'},
+  {id:'cm', name:'c 小調', md:'m', tonicMidi:60, tl:0, sig:'Cm'},
+  {id:'fm', name:'f 小調', md:'m', tonicMidi:65, tl:3, sig:'Fm'}
+];
+
+const SCALES = {
+  M: [0, 2, 4, 5, 7, 9, 11],
+  m: [0, 2, 3, 5, 7, 8, 10]
+};
+const LETTERS = 'cdefgab';
+const LETTER_SEMI = [0, 2, 4, 5, 7, 9, 11];
+
+const CLEF_RANGE = {
+  treble: { minMidi: 57, maxMidi: 84, label: '高音譜號（A3–C6）' },
+  bass:   { minMidi: 36, maxMidi: 64, label: '低音譜號（C2–E4）' }
+};
+
+const CLEF_INSTS = {
+  treble: [
+    { id: 'flute',  name: '長笛（Flute）', short: '長笛' },
+    { id: 'violin', name: '小提琴（Violin）', short: '小提琴' },
+    { id: 'piano',  name: '鋼琴（Piano）', short: '鋼琴' }
+  ],
+  bass: [
+    { id: 'cello',         name: '大提琴（Cello）', short: '大提琴' },
+    { id: 'bass_clarinet', name: '低音單簧管（Bass Clarinet）', short: '低音單簧管' },
+    { id: 'piano',         name: '鋼琴（Piano）', short: '鋼琴' }
+  ]
+};
+
+function getBaseTonicMidi(key, clef) {
+  let bt = key.tonicMidi;
+  if (clef === 'bass') {
+    while (bt > 51) bt -= 12;
+    while (bt < 40) bt += 12;
+  } else {
+    while (bt < 60) bt += 12;
+    while (bt > 71) bt -= 12;
+  }
+  return bt;
+}
+
+function getMidi(key, clef, step, alt = 0) {
+  const bt = getBaseTonicMidi(key, clef);
+  const octShift = Math.floor(step / 7);
+  const deg = mod7(step);
+  return bt + 12 * octShift + SCALES[key.md][deg] + alt;
+}
+
+function spellNote(key, clef, step, alt = 0) {
+  const m = getMidi(key, clef, step, alt);
+  const totalStep = key.tl + step;
+  const li = mod7(totalStep);
+  const oct = Math.round((m - LETTER_SEMI[li]) / 12) - 1;
+  const acc = m - (12 * (oct + 1) + LETTER_SEMI[li]);
+  const accStr = ['bb', 'b', '', '#', '##'][acc + 2] || '';
+  const dispAcc = ['𝄫', '♭', '', '♯', '𝄪'][acc + 2] || '';
+  return {
+    vfKey: `${LETTERS[li]}${accStr}/${oct}`,
+    accStr,
+    accVal: acc,
+    dispName: `${LETTERS[li].toUpperCase()}${dispAcc}${oct}`,
+    midi: m
+  };
+}
+
+function inClefRange(key, clef, step, alt = 0) {
+  const m = getMidi(key, clef, step, alt);
+  const r = CLEF_RANGE[clef];
+  if (m < r.minMidi || m > r.maxMidi) return false;
+  const sp = spellNote(key, clef, step, alt);
+  return Math.abs(sp.accVal) <= 1;
+}
+
+/* ==================== 2. 雙難度和聲規劃（基礎練習 vs 進階練習） ==================== */
+const HCH = {
+  M: {
+    I:[0,0,'M','I'], ii:[1,0,'m','ii'], iii:[2,0,'m','iii'], IV:[3,0,'M','IV'], V:[4,0,'M','V'], V7:[4,0,'7','V⁷'],
+    vi:[5,0,'m','vi'], viio:[6,0,'dim','vii°'],
+    iv:[3,0,'m','iv（平行借用）'], bVI:[5,-1,'M','♭VI（平行借用）'], bVII:[6,-1,'M','♭VII（平行借用）'],
+    'V/V':[1,0,'7','V⁷/V'], 'V/IV':[0,0,'7','V⁷/IV'], 'V/vi':[2,0,'7','V⁷/vi'], 'V/ii':[5,0,'7','V⁷/ii'],
+    N6:[1,-1,'M','N⁶'], c64:[0,0,'M','I⁶₄']
+  },
+  m: {
+    i:[0,0,'m','i'], iio:[1,0,'dim','ii°'], III:[2,0,'M','III'], iv:[3,0,'m','iv'], V:[4,0,'M','V'], V7:[4,0,'7','V⁷'],
+    VI:[5,0,'M','♭VI'], VII:[6,0,'M','♭VII'], viio:[6,1,'dim','vii°'],
+    IV:[3,0,'M','IV（平行借用♮6）'],
+    'V/iv':[0,0,'7','V⁷/iv'], 'V/V':[1,0,'7','V⁷/V'], 'V/III':[6,0,'7','V⁷/III'],
+    N6:[1,-1,'M','N⁶'], c64:[0,0,'m','i⁶₄']
+  }
+};
+
+const HGR_D1 = {
+  M: {
+    I:['ii','IV','V','V7','vi','iii','viio','V/IV','V/vi','V/ii','V/V','iv','bVI','bVII'],
+    ii:['V','V7','viio','c64','V/V'],
+    iii:['vi','IV','ii','V/vi','V/ii'],
+    IV:['V','V7','ii','I','iv','viio','V/V','c64'],
+    V:['I','vi','V7','bVI'],
+    V7:['I','vi','bVI'],
+    vi:['ii','IV','V','V7','iii','V/V','V/ii','bVI'],
+    viio:['I','vi'],
+    iv:['V','V7','I','viio','c64'],
+    bVI:['iv','V','V7','bVII'],
+    bVII:['I','IV','iv','V'],
+    'V/V':['V','V7','c64'], 'V/IV':['IV','iv'], 'V/vi':['vi','bVI'], 'V/ii':['ii'],
+    c64:['V','V7']
+  },
+  m: {
+    i:['iio','iv','V','V7','VI','III','VII','viio','V/iv','V/III','V/V','IV'],
+    iio:['V','V7','viio','c64'],
+    III:['VI','iv','iio','VII','V/iv'],
+    iv:['V','V7','i','viio','iio','c64','V/V'],
+    V:['i','VI','V7'],
+    V7:['i','VI'],
+    VI:['iio','iv','V','V7','III','VII','V/V','V/III'],
+    VII:['III','VI','i','iv'],
+    viio:['i'],
+    IV:['iv','V','V7','iio'],
+    'V/iv':['iv'], 'V/V':['V','V7','c64'], 'V/III':['III'],
+    c64:['V','V7']
+  }
+};
+
+const HGR_D2 = {
+  M: {
+    I:['ii','IV','V','V7','vi','iii','viio','c64','V/IV','V/vi','V/ii','iv','bVI','bVII','N6'],
+    ii:['V','V7','viio','c64','N6'],
+    iii:['vi','IV','ii','V/vi'],
+    IV:['V','V7','ii','I','iv','viio','V/V','c64','N6'],
+    V:['I','vi','V7','bVI'],
+    V7:['I','vi','bVI'],
+    vi:['ii','IV','V','V7','iii','V/V','V/ii'],
+    viio:['I','vi'],
+    iv:['V','V7','I','viio','N6','AUG6','c64'],
+    bVI:['iv','V','V7','bVII','AUG6','N6'],
+    bVII:['I','IV','iv','V'],
+    'V/V':['V','V7','c64'], 'V/IV':['IV'], 'V/vi':['vi'], 'V/ii':['ii'],
+    c64:['V','V7'], N6:['V','V7','c64'], AUG6:['V','V7','c64']
+  },
+  m: {
+    i:['iio','iv','V','V7','VI','III','VII','viio','c64','V/iv','V/III','IV','N6'],
+    iio:['V','V7','viio','c64','N6'],
+    III:['VI','iv','iio','VII','V/iv'],
+    iv:['V','V7','i','viio','iio','N6','AUG6','c64','V/V'],
+    V:['i','VI','V7'],
+    V7:['i','VI'],
+    VI:['iio','iv','V','V7','III','VII','AUG6','N6','V/V','V/III'],
+    VII:['III','VI','i','iv'],
+    viio:['i'],
+    IV:['iv','V','V7','iio','AUG6','N6'],
+    'V/iv':['iv'], 'V/V':['V','V7','c64'], 'V/III':['III'],
+    c64:['V','V7'], N6:['V','V7','c64'], AUG6:['V','V7','c64']
+  }
+};
+
+const HDIA = { M: ['I','ii','iii','IV','V','vi','viio'], m: ['i','iio','III','iv','V','VI','VII'] };
+
+function localKeyName(key, td, ta, lm) {
+  const li = mod7(key.tl + td);
+  const pc = ((key.tonicMidi % 12) + SCALES[key.md][td] + ta + 120) % 12;
+  let acc = ((pc - LETTER_SEMI[li]) % 12 + 12) % 12;
+  if (acc > 6) acc -= 12;
+  const as = acc === -1 ? '♭' : acc === 1 ? '♯' : '';
+  const L = LETTERS[li];
+  return lm === 'M' ? `${L.toUpperCase()}${as} 大調` : `${L}${as} 小調`;
+}
+
+function makeChord(md, L, name, aug) {
+  const hs = SCALES[md], ls = SCALES[L.lm];
+  const tonicPc = hs[L.td] + L.ta;
+  const toTone = (k, alt) => {
+    const d = mod7(L.td + k);
+    let a = ((tonicPc + ls[k] + alt - hs[d]) % 12 + 12) % 12;
+    if (a > 6) a -= 12;
+    return { d, a };
+  };
+  const scale = ls.map(x => ((tonicPc + x) % 12 + 12) % 12);
+  if (L.lm === 'm') scale.push(((tonicPc + 11) % 12 + 12) % 12);
+  const pref = L.home ? '' : `${L.short}：`;
+  if (name === 'AUG6') {
+    const lo = L.lm === 'M' ? -1 : 0;
+    const t = [toTone(5, lo), toTone(0, 0)];
+    if (aug === 'Fr+6') t.push(toTone(1, 0));
+    if (aug === 'Ger+6') t.push(toTone(2, lo));
+    t.push(toTone(3, 1));
+    return { name, tones: t, label: pref + aug.replace('+6', '⁺⁶'), scale, dom: false, lead: null, sev: null, tag: `增六和弦 ${aug}` };
+  }
+  const sp = HCH[L.lm][name];
+  const rootPc = tonicPc + ls[sp[0]] + sp[1];
+  const rootD = mod7(L.td + sp[0]);
+  const pat = { M:[0,4,7], m:[0,3,7], dim:[0,3,6], '7':[0,4,7,10] }[sp[2]];
+  const tones = pat.map((iv, i) => {
+    const d = mod7(rootD + 2 * i);
+    let a = ((rootPc + iv - hs[d]) % 12 + 12) % 12;
+    if (a > 6) a -= 12;
+    return { d, a };
+  });
+  const dom = ['V','V7','V/V','V/IV','V/vi','V/ii','V/iv','V/III','viio'].includes(name);
+  let tag = '';
+  if (name === 'N6') tag = '拿波里 N⁶（♭2→7）';
+  else if (name.startsWith('V/')) tag = `副屬和弦 ${sp[3]}`;
+  else if ((L.lm === 'M' && ['iv','bVI','bVII'].includes(name)) || (L.lm === 'm' && name === 'IV')) tag = `平行調借用 ${sp[3]}`;
+  return { name, tones, label: pref + sp[3], scale, dom, lead: name === 'viio' ? tones[0] : (dom ? tones[1] : null), sev: sp[2] === '7' ? tones[3] : null, tag };
+}
+
+function chordSig(md, L, name) {
+  const sp = HCH[L.lm][name];
+  return ((SCALES[md][L.td] + L.ta + SCALES[L.lm][sp[0]] + sp[1]) % 12 + 12) % 12 + '|' + sp[2];
+}
+
+function findPivots(md, home, X) {
+  const out = [];
+  for (const h of HDIA[home.lm]) for (const x of HDIA[X.lm]) {
+    if (chordSig(md, home, h) === chordSig(md, X, x)) out.push({ h, x });
+  }
+  return out;
+}
+
+function fillSeg(G, len, anch) {
+  const ok = (a, b) => a === b || (G[a] && G[a].includes(b));
+  const out = new Array(len).fill(null);
+  Object.keys(anch).forEach(k => { out[+k] = anch[k]; });
+  let guard = 0;
+  function rec(i) {
+    if (++guard > 9000) return false;
+    if (i === len) return true;
+    if (anch[i] !== undefined) return (i === 0 || ok(out[i - 1], out[i])) && rec(i + 1);
+    const prev = out[i - 1];
+    const opts = [...(G[prev] || [])].sort(() => Math.random() - 0.5);
+    if (Math.random() < 0.58) opts.unshift(prev); else opts.push(prev);
+    for (const c of opts) {
+      out[i] = c;
+      if (anch[i + 1] !== undefined && !ok(c, anch[i + 1])) continue;
+      if (rec(i + 1)) return true;
+    }
+    out[i] = null;
+    return false;
+  }
+  return rec(0) ? out : null;
+}
+
+function buildHarmonyPlan(key, cfg, diff) {
+  const md = key.md, nb = cfg.ticksPerBar / cfg.beatSize, hb = Math.ceil(nb / 2), NB = 8 * nb;
+  const home = { td: 0, ta: 0, lm: md, home: true, short: key.name.replace(' ', ''), name: key.name };
+  const tonicH = md === 'M' ? 'I' : 'i';
+  const circ = ['①', '②', '③', '④'];
+  const formType = pick(['sentence', 'asymmetric', 'arch']);
+
+  const tail = off => {
+    const o = {};
+    for (let b = 6 * nb + hb; b < 7 * nb; b++) o[b - off] = 'V7';
+    for (let b = 7 * nb; b < NB; b++) o[b - off] = tonicH;
+    return o;
+  };
+
+  if (diff === '1') {
+    const G1 = HGR_D1[md];
+    const secDoms = md === 'M' ? ['V/V', 'V/ii', 'V/vi', 'V/IV'] : ['V/iv', 'V/V', 'V/III'];
+    const borrows = md === 'M' ? ['iv', 'bVI', 'bVII'] : ['IV'];
+
+    for (let attempt = 0; attempt < 180; attempt++) {
+      const sd = pick(secDoms);
+      const sdTarget = sd.split('/')[1];
+      const br = pick(borrows);
+      const sdBeat = pick([2 * nb, 2 * nb + hb, 3 * nb]);
+      const brBeat = pick([4 * nb + hb, 5 * nb, 5 * nb + hb]);
+
+      const anch = {
+        0: tonicH,
+        [sdBeat]: sd,
+        [sdBeat + 1]: sdTarget,
+        [brBeat]: br,
+        ...tail(0)
+      };
+
+      const seq = fillSeg(G1, NB, anch);
+      if (!seq) continue;
+
+      const rolesByForm = {
+        sentence: [
+          '原型動機（Basic Idea）｜建立主調',
+          '動機延展與功能進行',
+          `動機模進（Sequence）：引入附屬和弦 ${HCH[md][sd][3]}`,
+          `模進解決至 ${HCH[md][sdTarget][3]}，跨小節推進不中斷`,
+          '展開推進（Continuation）：邁向最高點',
+          `平行調借用 ${HCH[md][br][3]}，豐富色彩`,
+          '屬七和弦（V⁷）預備終止',
+          '完全正格終止（PAC）回到主調'
+        ],
+        asymmetric: [
+          '三小節樂句起首：動機呈示',
+          '動機推展',
+          `附屬和弦 ${HCH[md][sd][3]} → ${HCH[md][sdTarget][3]} 暫時離調`,
+          '新樂句銜接（不作半終止停頓）',
+          `最高點樂段：平行調借用 ${HCH[md][br][3]}`,
+          '借用和弦向屬功能收斂',
+          '屬七和弦（V⁷）導向終止',
+          '完全正格終止（PAC）回到主調'
+        ],
+        arch: [
+          '拱形起首（2+3+3 結構）：主調呈示',
+          '線條上揚鋪陳',
+          `中段推進：附屬和弦 ${HCH[md][sd][3]}`,
+          `解決至 ${HCH[md][sdTarget][3]} 並持續推升`,
+          '全曲最高點（Climax）',
+          `平行調借用 ${HCH[md][br][3]} 柔化線條`,
+          '屬七和弦（V⁷）終止準備',
+          '完全正格終止（PAC）回到主調'
+        ]
+      };
+
+      const plan = [];
+      for (let b = 0; b < 8; b++) {
+        const slots = seq.slice(b * nb, (b + 1) * nb).map(nm => makeChord(md, home, nm, ''));
+        const parts = [];
+        slots.forEach((c, i) => {
+          const last = parts[parts.length - 1];
+          if (last && last.c === c.label) last.n.push(i + 1);
+          else parts.push({ c: c.label, n: [i + 1] });
+        });
+        const tags = [...new Set(slots.map(c => c.tag).filter(Boolean))];
+        plan.push({
+          bar: b + 1,
+          slots,
+          label: parts.map(pt => `${pt.c} ${pt.n.map(x => circ[x - 1] || x).join('')}`).join(' → '),
+          role: rolesByForm[formType][b],
+          chrTag: tags.join('；')
+        });
+      }
+      plan.formType = formType;
+      plan.modInfo = `基礎練習：全曲維持 ${key.name}（前後同調，不轉調），運用附屬和弦（${HCH[md][sd][3]}）與平行調借用（${HCH[md][br][3]}）`;
+      return plan;
+    }
+  }
+
+  const aBeat = nb >= 3 ? 3 * nb + nb - 2 : 3 * nb;
+  const vBeat = 4 * nb - 1;
+
+  for (let attempt = 0; attempt < 180; attempt++) {
+    const aug = pick(['It+6', 'Fr+6', 'Ger+6']);
+    const useV2 = md === 'M' && Math.random() < 0.45;
+    const tg = md === 'M'
+      ? (useV2 ? [{td:4,ta:0,lm:'M'}, {td:5,ta:0,lm:'m'}, {td:2,ta:0,lm:'m'}]
+               : [{td:4,ta:0,lm:'M'}, {td:5,ta:0,lm:'m'}, {td:3,ta:0,lm:'M'}, {td:2,ta:0,lm:'m'}])
+      : [{td:2,ta:0,lm:'M'}, {td:4,ta:0,lm:'m'}, {td:3,ta:0,lm:'m'}, {td:6,ta:0,lm:'M'}, {td:5,ta:0,lm:'M'}];
+    const X0 = pick(tg);
+    const xname = localKeyName(key, X0.td, X0.ta, X0.lm);
+    const X = { ...X0, home: false, name: xname, short: xname.replace(' ', '') };
+    const tonicX = X.lm === 'M' ? 'I' : 'i';
+    const piv = findPivots(md, home, X).sort(() => Math.random() - 0.5);
+    if (!piv.length) continue;
+
+    const mk = (L, nm) => makeChord(md, L, nm, aug);
+    const pivChord = (hn, xn, fwd) => {
+      const c = makeChord(md, home, hn, aug);
+      c.label = fwd ? `${c.label}＝${X.short}：${HCH[X.lm][xn][3]}` : `${X.short}：${HCH[X.lm][xn][3]}＝${c.label}`;
+      c.tag = `樞紐和弦 ${c.label}`;
+      c.pivot = true;
+      return c;
+    };
+
+    const beats = [];
+    let info, roles;
+
+    if (!useV2) {
+      const p = 2 * nb - 1, q = 4 * nb + hb;
+      const pf = piv[0];
+      const pb = piv[Math.min(piv.length - 1, 1 + Math.floor(Math.random() * (piv.length - 1)))] || piv[0];
+      const A = fillSeg(HGR_D2[md], p + 1, { 0: tonicH, [p]: pf.h });
+      const B = fillSeg(HGR_D2[X.lm], q - p + 1, { 0: pf.x, [aBeat - p]: 'AUG6', [vBeat - p]: 'V', [4 * nb - p]: tonicX, [q - p]: pb.x });
+      const C = fillSeg(HGR_D2[md], NB - q, Object.assign({ 0: pb.h, [5 * nb - q]: 'IV', [5 * nb + hb - q]: 'iv', [6 * nb - q]: 'N6' }, tail(q)));
+      if (!A || !B || !C) continue;
+
+      for (let b = 0; b < p; b++) beats.push(mk(home, A[b]));
+      beats.push(pivChord(pf.h, pf.x, true));
+      for (let b = p + 1; b < q; b++) beats.push(mk(X, B[b - p]));
+      beats.push(pivChord(pb.h, pb.x, false));
+      for (let b = q + 1; b < NB; b++) beats.push(mk(home, C[b - q]));
+
+      info = `進階練習：${key.name} → 轉調至 ${X.name}（第 3–5 小節，樞紐 ${beats[p].label}）→ 第 5 小節後半以 ${beats[q].label} 轉回原調 ${key.name}`;
+      roles = [
+        '原型動機（Motif A）｜確立原調',
+        '動機延伸；末拍以樞紐和弦轉調',
+        `動機模進（Sequence）：進入 ${X.name}`,
+        `${X.name}：增六和弦（${aug}）→ 屬和弦跨小節推進`,
+        `${X.name} 主和弦解決；後半樞紐回原調（最高點區）`,
+        '回原調：借用 IV→iv 預備拿波里（最高點區）',
+        '拿波里 N⁶ → V⁷（♭2 減三度下行解決）',
+        `完全正格終止（PAC）回到原調 ${key.name}`
+      ];
+    } else {
+      const q2 = 6 * nb - 1;
+      const xv = HDIA[X.lm].find(x => chordSig(md, X, x) === chordSig(md, home, 'V'));
+      const bk = piv.filter(v => HGR_D2[md][v.h].includes('N6'));
+      if (!xv || !bk.length) continue;
+      const pb = bk[0];
+
+      const A = fillSeg(HGR_D2[md], vBeat + 1, { 0: tonicH, [2 * nb]: 'IV', [2 * nb + hb]: 'iv', [aBeat]: 'AUG6', [vBeat]: 'V' });
+      const B = fillSeg(HGR_D2[X.lm], q2 - vBeat + 1, { 0: xv, [nb]: 'V', [nb + 1]: tonicX, [q2 - vBeat]: pb.x });
+      const C = fillSeg(HGR_D2[md], NB - q2, Object.assign({ 0: pb.h, [6 * nb - q2]: 'N6' }, tail(q2)));
+      if (!A || !B || !C) continue;
+
+      for (let b = 0; b < vBeat; b++) beats.push(mk(home, A[b]));
+      const vc = makeChord(md, home, 'V', aug);
+      vc.label = `V＝${X.short}：${HCH[X.lm][xv][3]}`;
+      vc.tag = `樞紐和弦 ${vc.label}`;
+      vc.pivot = true;
+      beats.push(vc);
+      for (let b = vBeat + 1; b < q2; b++) beats.push(mk(X, B[b - vBeat]));
+      beats.push(pivChord(pb.h, pb.x, false));
+      for (let b = q2 + 1; b < NB; b++) beats.push(mk(home, C[b - q2]));
+
+      info = `進階練習：${key.name} → 第 4 小節末以 V＝${X.short}：${HCH[X.lm][xv][3]} 轉調至 ${X.name}（第 5–6 小節）→ 第 6 小節末以 ${beats[q2].label} 轉回原調 ${key.name}`;
+      roles = [
+        '原型動機（Motif A）｜確立原調',
+        '動機延伸、功能進行',
+        '動機模進（Sequence）：借用 IV→iv 預備增六',
+        `增六和弦（${aug}）→ V 兼作新調樞紐，跨小節轉調`,
+        `臨時轉調 ${X.name}：新調功能推進（最高點區）`,
+        `${X.name} 屬→主確立；末拍樞紐回原調`,
+        '拿波里 N⁶ → V⁷（♭2 減三度下行解決）',
+        `完全正格終止（PAC）回到原調 ${key.name}`
+      ];
+    }
+
+    const plan = [];
+    for (let b = 0; b < 8; b++) {
+      const slots = beats.slice(b * nb, (b + 1) * nb);
+      const parts = [];
+      slots.forEach((c, i) => {
+        const last = parts[parts.length - 1];
+        if (last && last.c === c.label) last.n.push(i + 1);
+        else parts.push({ c: c.label, n: [i + 1] });
+      });
+      const tags = [...new Set(slots.map(c => c.tag).filter(Boolean))];
+      const inX = slots.filter(c => c.label.includes('：') && !c.pivot).length;
+      if (inX) tags.unshift(`臨時轉調 ${X.name}`);
+      plan.push({
+        bar: b + 1,
+        slots,
+        label: parts.map(pt => `${pt.c} ${pt.n.map(x => circ[x - 1] || x).join('')}`).join(' → '),
+        role: roles[b],
+        chrTag: tags.join('；')
+      });
+    }
+    plan.formType = formType;
+    plan.modInfo = info;
+    return plan;
+  }
+  return null;
+}
+
+/* ==================== 3. 節奏骨架生成（含標準切分音型） ==================== */
+const TIME_CONFIG = {
+  '4/4': { numBeats: 4, beatValue: 4, ticksPerBar: 16, beatSize: 4, beamGroups: [1, 4] },
+  '3/4': { numBeats: 3, beatValue: 4, ticksPerBar: 12, beatSize: 4, beamGroups: [1, 4] },
+  '6/8': { numBeats: 6, beatValue: 8, ticksPerBar: 12, beatSize: 6, beamGroups: [3, 8] },
+  '9/8': { numBeats: 9, beatValue: 8, ticksPerBar: 18, beatSize: 6, beamGroups: [3, 8] }
+};
+
+function buildOneRhythmBar(cfg, allow16) {
+  let barTicks = [];
+  let bar16Beats = 0;
+
+  if (cfg.beatSize === 4) {
+    if (cfg.ticksPerBar === 16 && Math.random() < 0.22) {
+      return pick([
+        [4, 8, 4],
+        [2, 4, 4, 4, 2]
+      ]);
+    }
+    let rem = cfg.ticksPerBar;
+    while (rem > 0) {
+      if (rem >= 8 && Math.random() < 0.42) {
+        barTicks.push(...pick([[2, 4, 2], [2, 6], [6, 2], [4, 4]]));
+        rem -= 8;
+      } else {
+        const simpleCells = [[4], [2, 2], [4]];
+        const sixteenthCells = [[1, 2, 1], [2, 1, 1], [1, 1, 2], [3, 1], [1, 1, 1, 1]];
+        if (allow16 && bar16Beats < 2 && Math.random() < 0.46) {
+          barTicks.push(...pick(sixteenthCells));
+          bar16Beats++;
+        } else {
+          barTicks.push(...pick(simpleCells));
+        }
+        rem -= 4;
+      }
+    }
+  } else {
+    const nb = cfg.numBeats / 3;
+    for (let cb = 0; cb < nb; cb++) {
+      const compLong = [[6], [4, 2], [2, 4], [2, 2, 2]];
+      const comp16 = [[1, 2, 1, 2], [2, 1, 2, 1], [1, 4, 1], [3, 1, 2], [2, 1, 1, 2]];
+      if (allow16 && bar16Beats < 1 && Math.random() < 0.46) {
+        barTicks.push(...pick(comp16));
+        bar16Beats++;
+      } else {
+        barTicks.push(...pick(compLong));
+      }
+    }
+  }
+  return barTicks;
+}
+
+function generateRhythm(timeSig, formType) {
+  const cfg = TIME_CONFIG[timeSig];
+  for (let attempt = 0; attempt < 260; attempt++) {
+    const bars = [];
+    let consec16 = 0;
+
+    const motifBar = buildOneRhythmBar(cfg, false);
+    const seq16Bar = buildOneRhythmBar(cfg, true);
+
+    for (let b = 0; b < 8; b++) {
+      let barTicks = [];
+      const allow16 = consec16 < 2 && (b >= 1 && b <= 6);
+
+      if (b === 0) {
+        barTicks = [...motifBar];
+      } else if (b === 2) {
+        barTicks = [...motifBar];
+      } else if (b === 3) {
+        barTicks = buildOneRhythmBar(cfg, Math.random() < 0.35);
+      } else if (b === 4 && seq16Bar.includes(1) && Math.random() < 0.65) {
+        barTicks = [...seq16Bar];
+      } else if (b === 5 && bars[4] && bars[4].includes(1) && Math.random() < 0.55) {
+        barTicks = [...bars[4]];
+      } else if (b === 7) {
+        if (cfg.beatSize === 4) {
+          barTicks = cfg.numBeats === 4 ? [4, 4, 8] : [4, 8];
+        } else {
+          barTicks = cfg.numBeats === 6 ? [6, 6] : [6, 6, 6];
+        }
+      } else {
+        barTicks = buildOneRhythmBar(cfg, allow16);
+      }
+
+      const has16 = barTicks.includes(1);
+      consec16 = has16 ? consec16 + 1 : 0;
+      bars.push(barTicks);
+    }
+
+    const groups = [];
+    let tickCursor = 0;
+    for (let b = 0; b < 8; b++) {
+      for (const dur of bars[b]) {
+        groups.push({
+          groupId: groups.length,
+          bar: b,
+          startTick: tickCursor,
+          ticks: dur,
+          isTieSuspension: false
+        });
+        tickCursor += dur;
+      }
+    }
+
+    const tieTargets = formType === 'asymmetric' ? [3, 5] : [1, 4];
+    let tiesMade = 0;
+    for (const targetBar of tieTargets) {
+      const barStartTick = targetBar * cfg.ticksPerBar;
+      const idx = groups.findIndex(g => g.startTick === barStartTick);
+      if (idx > 0 && groups[idx - 1].ticks <= 4 && groups[idx].ticks <= 4 && Math.random() < 0.72) {
+        groups[idx - 1].ticks += groups[idx].ticks;
+        groups[idx - 1].isTieSuspension = true;
+        groups.splice(idx, 1);
+        groups.forEach((g, k) => g.groupId = k);
+        tiesMade++;
+      }
+    }
+    if (tiesMade === 0) {
+      const cand = groups.findIndex(g => g.bar === 1 && g.ticks === 2 && groups[g.groupId + 1]?.ticks === 2);
+      if (cand > 0) {
+        groups[cand].ticks += groups[cand + 1].ticks;
+        groups[cand].isTieSuspension = true;
+        groups.splice(cand + 1, 1);
+        groups.forEach((g, k) => g.groupId = k);
+      }
+    }
+
+    const totalTicks = 8 * cfg.ticksPerBar;
+    const longTicks = groups.filter(g => g.ticks >= 4).reduce((s, g) => s + g.ticks, 0);
+    const any16 = groups.some(g => g.ticks === 1);
+    if (longTicks / totalTicks >= 0.42 && any16 && groups.length >= 21 && groups.length <= 42) {
+      return groups;
+    }
+  }
+  return null;
+}
+
+/* ==================== 4. 反覆與防環繞檢核工具 ==================== */
+function analyzePitchRepetitions(midis) {
+  let directTriplePlaces = 0;
+  let maxSameRun = 1;
+  let curRun = 1;
+  for (let i = 1; i < midis.length; i++) {
+    if (midis[i] === midis[i - 1]) {
+      curRun++;
+      if (curRun === 3) directTriplePlaces++;
+      if (curRun > maxSameRun) maxSameRun = curRun;
+    } else {
+      curRun = 1;
+    }
+  }
+
+  let twoNoteOscPlaces = 0;
+  let hasFiveOsc = false;
+  let neighborTurns = 0;
+  for (let i = 2; i < midis.length; i++) {
+    if (midis[i] !== midis[i - 1] && midis[i] === midis[i - 2]) {
+      neighborTurns++;
+      if (i >= 3 && midis[i - 1] === midis[i - 3]) {
+        twoNoteOscPlaces++;
+        if (i >= 4 && midis[i - 2] === midis[i - 4]) hasFiveOsc = true;
+      }
+    }
+  }
+
+  let stagnantWindows = 0;
+  for (let i = 0; i <= midis.length - 6; i++) {
+    const win = midis.slice(i, i + 6);
+    const uniq = new Set(win).size;
+    if (uniq < 4) stagnantWindows++;
+    const counts = {};
+    for (const m of win.slice(0, 5)) {
+      counts[m] = (counts[m] || 0) + 1;
+      if (counts[m] >= 3) stagnantWindows++;
+    }
+  }
+
+  return { directTriplePlaces, maxSameRun, twoNoteOscPlaces, hasFiveOsc, neighborTurns, stagnantWindows };
+}
+
+function analyzeContour(midis) {
+  let tightTurns = 0, runs = 0, moves = 0, runLen = 0, lastSg = 0, lastAbs = 0;
+  for (let i = 1; i < midis.length; i++) {
+    const d = midis[i] - midis[i - 1], sg = Math.sign(d), ab = Math.abs(d);
+    if (sg === 0) { lastSg = 0; continue; }
+    if (sg === lastSg) {
+      runLen++;
+    } else {
+      if (lastSg !== 0) {
+        if (ab <= 2 && lastAbs <= 2 && runLen < 2) tightTurns++;
+        runs++; moves += runLen;
+      }
+      runLen = 1;
+    }
+    lastSg = sg; lastAbs = ab;
+  }
+  if (lastSg !== 0) { runs++; moves += runLen; }
+  return { tightTurns, avgRun: runs ? moves / runs : 0 };
+}
+
+function assignDynamics(notes, cfg) {
+  const maxMidi = Math.max(...notes.map(n => n.midi));
+  const climaxIdx = Math.max(1, notes.findIndex(n => n.midi === maxMidi));
+  notes.forEach((n, i) => {
+    const off = n.startTick - n.bar * cfg.ticksPerBar;
+    let v = (off % cfg.beatSize === 0) ? 0.70 : 0.58;
+    if (off === 0) v += 0.04;
+    const arc = i <= climaxIdx ? i / climaxIdx : 1 - (i - climaxIdx) / Math.max(1, notes.length - climaxIdx);
+    v += 0.13 * arc;
+    n.accent = false; n.resolve = false; n.durMul = 1;
+    const dissonant = ['App', 'S', 'ChrP'].includes(n.nctType);
+    const strongOrLong = (off % cfg.beatSize === 0) || n.ticks >= 4;
+    if (((dissonant && n.nctType !== 'ChrP') || (n.alt !== 0 && strongOrLong)) && Math.random() < 0.7) {
+      n.accent = true;
+      v += 0.18;
+    }
+    n.vel = v;
+  });
+  for (let i = 1; i < notes.length; i++) {
+    if (notes[i - 1].accent) {
+      notes[i].resolve = true;
+      notes[i].vel -= 0.16;
+      notes[i].durMul = 0.88;
+    }
+  }
+  notes.forEach(n => { n.vel = Math.min(1, Math.max(0.32, n.vel)); });
+}
+
+/* ==================== 5. 旋律、動機模仿進行、強制解決外音與歌唱性引擎 ==================== */
+function composeMelody(key, clef, timeSig, diff) {
+  const cfg = TIME_CONFIG[timeSig];
+  const r = CLEF_RANGE[clef];
+
+  for (let outerTry = 0; outerTry < 220; outerTry++) {
+    const harmony = buildHarmonyPlan(key, cfg, diff);
+    if (!harmony) continue;
+    const groups = generateRhythm(timeSig, harmony.formType);
+    if (!groups) continue;
+
+    const startDeg = pick([0, 2, 4]);
+    let startStep = startDeg;
+    if (!inClefRange(key, clef, startStep, 0)) startStep += 7;
+
+    const allSteps = [];
+    for (let s = -14; s <= 18; s++) {
+      if (inClefRange(key, clef, s, 0)) allSteps.push(s);
+    }
+
+    const climaxTargetMidi = Math.min(r.maxMidi - 1, getBaseTonicMidi(key, clef) + (key.md === 'M' ? 16 : 15));
+    const startMidiPlan = getMidi(key, clef, startStep, 0);
+    const baseTonic = getBaseTonicMidi(key, clef);
+
+    const sh = pick([[0, 2, 4, 6], [0, 3, 2, 5], [0, -2, 2, 5], [0, 2, 5, 4]]);
+    const arcPts = [
+      startMidiPlan + sh[0],
+      startMidiPlan + sh[1],
+      startMidiPlan + sh[2],
+      startMidiPlan + sh[3],
+      climaxTargetMidi - 1,
+      climaxTargetMidi,
+      climaxTargetMidi - 5,
+      baseTonic + 2,
+      baseTonic
+    ];
+
+    const slotHarms = groups.map(g => {
+      const off = g.startTick - g.bar * cfg.ticksPerBar;
+      const bi = Math.min(harmony[g.bar].slots.length - 1, Math.floor(off / cfg.beatSize));
+      return harmony[g.bar].slots[bi];
+    });
+
+    const notes = [];
+    let nodesVisited = 0;
+
+    function solve(i, tripleSameSoFar, neighborTurnsSoFar) {
+      if (++nodesVisited > 4500) return false;
+      if (i === groups.length) {
+        const last = notes[notes.length - 1];
+        if (last.nctType !== null) return false;
+        return true;
+      }
+
+      const g = groups[i];
+      const barStart = g.bar * cfg.ticksPerBar;
+      const offsetInBar = g.startTick - barStart;
+      const isStrongBeat = (offsetInBar % cfg.beatSize === 0);
+      const isMeasureHead = (offsetInBar === 0);
+      const harm = slotHarms[i];
+      const nextHarm = i + 1 < groups.length ? slotHarms[i + 1] : harm;
+      const isLastNote = (i === groups.length - 1);
+
+      if (i === 0) {
+        const sp = spellNote(key, clef, startStep, 0);
+        notes.push({
+          ...g, step: startStep, alt: 0, midi: sp.midi,
+          vfKey: sp.vfKey, dispName: sp.dispName,
+          nctType: null, nctDesc: '和聲音（主題動機起音）'
+        });
+        if (solve(1, 0, 0)) return true;
+        notes.pop();
+        return false;
+      }
+
+      const prev = notes[i - 1];
+      const prev2 = i >= 2 ? notes[i - 2] : null;
+      const prev3 = i >= 3 ? notes[i - 3] : null;
+      const prevLeap = prev2 ? (prev.midi - prev2.midi) : 0;
+      const prevStepDiff = prev2 ? (prev.step - prev2.step) : 0;
+      const prevHarm = slotHarms[i - 1];
+
+      const bar1Notes = notes.filter(n => n.bar === 0);
+      const bar3NotesSoFar = notes.filter(n => n.bar === 2);
+      let desiredSeqStepDiff = null;
+      if (g.bar === 2 && bar3NotesSoFar.length > 0 && bar3NotesSoFar.length < bar1Notes.length) {
+        const k = bar3NotesSoFar.length;
+        desiredSeqStepDiff = bar1Notes[k].step - bar1Notes[k - 1].step;
+      }
+
+      let runDir = 0, runLen = 0;
+      for (let k = notes.length - 1; k >= 1; k--) {
+        const sg0 = Math.sign(notes[k].midi - notes[k - 1].midi);
+        if (sg0 === 0) break;
+        if (runDir === 0) { runDir = sg0; runLen = 1; }
+        else if (sg0 === runDir) runLen++;
+        else break;
+      }
+      const arcT = arcPts[g.bar] + (arcPts[g.bar + 1] - arcPts[g.bar]) * (offsetInBar / cfg.ticksPerBar);
+
+      const cands = [];
+      for (const s of allSteps) {
+        const deg = mod7(s);
+        const altsToTry = [0];
+        harm.tones.forEach(t => { if (t.d === deg && !altsToTry.includes(t.a)) altsToTry.push(t.a); });
+        if (key.md === 'm' && deg === 6 && !altsToTry.includes(1)) altsToTry.push(1);
+        if (!isStrongBeat && !isLastNote && g.ticks <= 2) {
+          if (!altsToTry.includes(1)) altsToTry.push(1);
+          if (!altsToTry.includes(-1)) altsToTry.push(-1);
+        }
+
+        for (const alt of altsToTry) {
+          if (!inClefRange(key, clef, s, alt)) continue;
+          const m = getMidi(key, clef, s, alt);
+          const diffMidi = m - prev.midi;
+          const stepDiff = s - prev.step;
+          const isChordTone = harm.tones.some(t => t.d === deg && t.a === alt);
+
+          if (isLastNote && !(deg === 0 && alt === 0)) continue;
+          if (g.bar === 7 && isMeasureHead && !isChordTone) continue;
+
+          if (diff === '2' && g.bar === 6 && isMeasureHead && harm.name === 'N6') {
+            if (!(deg === 1 && alt === -1)) continue;
+          }
+          if (prev.bar === 6 && prev.alt === -1 && mod7(prev.step) === 1) {
+            if (!(stepDiff === -2 && diffMidi === -3)) continue;
+          }
+
+          if (prev.nctType) {
+            if (!isChordTone) continue;
+            if (prev.nctType === 'P' || prev.nctType === 'ChrP') {
+              if (!(Math.abs(stepDiff) === 1 && Math.abs(diffMidi) <= 2 && Math.sign(stepDiff) === Math.sign(prevStepDiff))) continue;
+            } else if (prev.nctType === 'N') {
+              if (!(prev2 && m === prev2.midi && Math.abs(stepDiff) === 1)) continue;
+            } else if (prev.nctType === 'S' || prev.nctType === 'App') {
+              if (!(Math.abs(stepDiff) === 1 && Math.abs(diffMidi) <= 2)) continue;
+            } else if (prev.nctType === 'Ant') {
+              if (diffMidi !== 0) continue;
+            }
+          }
+
+          let addsTripleSame = 0;
+          if (diffMidi === 0) {
+            if (prev2 && prev2.midi === m) {
+              if (prev3 && prev3.midi === m) continue;
+              if (tripleSameSoFar >= 1) continue;
+              addsTripleSame = 1;
+            }
+          }
+
+          let addsNeighborTurn = 0;
+          if (prev2 && m !== prev.midi && m === prev2.midi) {
+            if (prev3 && prev.midi === prev3.midi) continue;
+            if (neighborTurnsSoFar >= 1) continue;
+            addsNeighborTurn = 1;
+          }
+
+          if (notes.length >= 5) {
+            const recent5 = notes.slice(-5).map(n => n.midi);
+            if (new Set([...recent5, m]).size < 4) continue;
+            if (recent5.slice(-4).filter(x => x === m).length >= 2) continue;
+          }
+
+          if (Math.abs(diffMidi) > 9 || Math.abs(diffMidi) === 6 || Math.abs(diffMidi) === 10 || Math.abs(diffMidi) === 11) continue;
+          if (Math.abs(stepDiff) === 1 && Math.abs(diffMidi) === 3 && !(prev.bar === 6 && prev.alt === -1)) continue;
+
+          if (g.ticks === 1 || prev.ticks === 1) {
+            if (Math.abs(stepDiff) > 2 || Math.abs(diffMidi) > 4) continue;
+            if (Math.abs(stepDiff) === 2 && runDir !== 0 && Math.sign(diffMidi) !== runDir) continue;
+          }
+
+          if (Math.abs(prevLeap) >= 5) {
+            if (!(diffMidi * prevLeap < 0 && Math.abs(stepDiff) === 1 && Math.abs(diffMidi) <= 2)) continue;
+          }
+
+          let nctType = null;
+          let nctDesc = '';
+          let score = Math.random() * 3.8;
+
+          if (isChordTone) {
+            nctType = null;
+            nctDesc = alt !== 0 ? `變化和聲音（${harm.label}）` : `和聲音（${harm.label}）`;
+            if (isStrongBeat) score -= 16;
+            if (alt !== 0) score -= 12;
+            if (isMeasureHead && harm.tones[0].d === deg && harm.tones[0].a === alt) score -= 4;
+            if (prevHarm !== harm) score -= 4;
+          } else {
+            if (isLastNote) continue;
+
+            if (g.isTieSuspension && diffMidi === 0 && prev.nctType === null) {
+              nctType = 'S';
+              nctDesc = `掛留音（由 ${prev.dispName} 保留，下一音級進解決）`;
+              score -= 13;
+            } else if (isStrongBeat && !isMeasureHead && Math.abs(prevStepDiff) >= 2 && Math.abs(diffMidi) <= 7 && prev.nctType === null) {
+              nctType = 'App';
+              nctDesc = `倚音（強拍張力音，下一音級進解決）`;
+              score -= 9;
+            } else if (!isStrongBeat && Math.abs(stepDiff) === 1 && Math.abs(diffMidi) <= 2 && prev.nctType === null) {
+              if (alt !== 0 && !(key.md === 'm' && deg === 6 && alt === 1)) {
+                if (Math.abs(diffMidi) === 1 && runDir !== 0 && Math.sign(diffMidi) === runDir) {
+                  nctType = 'ChrP';
+                  nctDesc = `半音經過音（半音級進過渡至下一和弦音）`;
+                  score += 2;
+                } else {
+                  continue;
+                }
+              } else {
+                if (prev2 && m === prev2.midi) {
+                  nctType = 'N';
+                  nctDesc = `鄰音（由 ${prev.dispName} 級進裝飾後返回）`;
+                  score += 1;
+                } else {
+                  nctType = 'P';
+                  nctDesc = `經過音（級進連接前後和弦音）`;
+                  score -= 9;
+                }
+              }
+            } else if (!isStrongBeat && g.ticks <= 2 && nextHarm !== harm && nextHarm.tones.some(t => t.d === deg && t.a === alt) && Math.abs(diffMidi) <= 2 && prev.nctType === null) {
+              nctType = 'Ant';
+              nctDesc = `先現音（提前預示下一和弦音）`;
+              score -= 5;
+            } else {
+              continue;
+            }
+          }
+
+          if (nctType === 'P' || nctType === 'N' || nctType === 'App' || nctType === 'Ant') {
+            const pcRel = ((m - key.tonicMidi) % 12 + 12) % 12;
+            if (!harm.scale.includes(pcRel)) continue;
+          }
+
+          if (Math.abs(stepDiff) === 1) score -= 3.5;
+          const sg = Math.sign(diffMidi);
+          if (sg !== 0 && runDir !== 0) {
+            if (sg === runDir) {
+              if (runLen >= 4) score += 7;
+              else score -= (Math.abs(diffMidi) <= 2 ? 6.5 : 2.5);
+            } else if (runLen < 2 && Math.abs(prevLeap) <= 2 && Math.abs(diffMidi) <= 2) {
+              score += 14;
+            } else if (runLen >= 3) {
+              score -= 3.5;
+            }
+          }
+
+          if (prevHarm.lead && mod7(prev.step) === prevHarm.lead.d && prev.alt === prevHarm.lead.a) {
+            if (stepDiff === 1 && (diffMidi === 1 || diffMidi === 2)) score -= 13;
+            else if (diffMidi !== 0) score += 8;
+          }
+          if (prevHarm.sev && mod7(prev.step) === prevHarm.sev.d && prev.alt === prevHarm.sev.a) {
+            if (stepDiff === -1 && (diffMidi === -1 || diffMidi === -2)) score -= 10;
+            else score += 6;
+          }
+
+          if (desiredSeqStepDiff !== null && desiredSeqStepDiff !== 0) {
+            if (stepDiff === desiredSeqStepDiff) score -= 8.5;
+            else if (Math.sign(stepDiff) === Math.sign(desiredSeqStepDiff)) score -= 3.5;
+          }
+
+          if (diffMidi === 0 && !g.isTieSuspension && prev.nctType !== 'Ant') score += 16;
+
+          score += Math.abs(m - arcT) * ((g.bar === 4 || g.bar === 5) ? 0.65 : 0.45);
+          if (!(g.bar === 4 || g.bar === 5) && m >= climaxTargetMidi) score += 28;
+
+          if (Math.abs(diffMidi) === 3 || Math.abs(diffMidi) === 4) score -= 2.5;
+          if (Math.abs(diffMidi) >= 7) score += 4.5;
+
+          cands.push({
+            step: s, alt, midi: m, nctType, nctDesc, score,
+            addsTripleSame, addsNeighborTurn
+          });
+        }
+      }
+
+      if (!cands.length) return false;
+      cands.sort((a, b) => a.score - b.score);
+
+      const topCands = cands.slice(0, 4);
+      for (const best of topCands) {
+        const sp = spellNote(key, clef, best.step, best.alt);
+        notes.push({
+          ...g,
+          step: best.step,
+          alt: best.alt,
+          midi: best.midi,
+          vfKey: sp.vfKey,
+          dispName: sp.dispName,
+          nctType: best.nctType,
+          nctDesc: best.nctDesc
+        });
+
+        if (solve(i + 1, tripleSameSoFar + best.addsTripleSame, neighborTurnsSoFar + best.addsNeighborTurn)) {
+          return true;
+        }
+        notes.pop();
+      }
+      return false;
+    }
+
+    if (!solve(0, 0, 0) || notes.length !== groups.length) continue;
+
+    const midis = notes.map(n => n.midi);
+    const rep = analyzePitchRepetitions(midis);
+    if (rep.directTriplePlaces > 1 || rep.maxSameRun > 3) continue;
+    if (rep.twoNoteOscPlaces > 0 || rep.hasFiveOsc) continue;
+    if (rep.neighborTurns > 1 || rep.stagnantWindows > 0) continue;
+
+    const maxMidi = Math.max(...midis);
+    const minMidi = Math.min(...midis);
+    const maxIndices = notes.map((n, idx) => n.midi === maxMidi ? idx : -1).filter(idx => idx !== -1);
+    const climaxInMid = maxIndices.length === 1 && (notes[maxIndices[0]].bar === 4 || notes[maxIndices[0]].bar === 5);
+    const nctCount = notes.filter(n => n.nctType !== null).length;
+
+    let stepIntervals = 0;
+    for (let k = 1; k < midis.length; k++) {
+      const iv = Math.abs(midis[k] - midis[k - 1]);
+      if (iv === 1 || iv === 2) stepIntervals++;
+    }
+    const stepRatio = stepIntervals / (midis.length - 1);
+
+    const contour = analyzeContour(midis);
+    const strict = outerTry < 140;
+    if (contour.tightTurns > (strict ? 3 : 6) || contour.avgRun < (strict ? 1.9 : 1.55)) continue;
+
+    const hasAltered = notes.some(n => n.alt !== 0);
+    if (!hasAltered && outerTry < 180) continue;
+
+    if (maxMidi - minMidi >= 10 && climaxInMid && nctCount >= (strict ? 4 : 3) && stepRatio >= 0.45 && stepRatio <= 0.86) {
+      assignDynamics(notes, cfg);
+      return {
+        harmony,
+        trueGroups: notes,
+        climaxBar: notes[maxIndices[0]].bar + 1,
+        climaxNote: notes[maxIndices[0]].dispName
+      };
+    }
+  }
+  return null;
+}
+
+/* ==================== 6. 譜面故意錯音生成器（保底 3～5 個錯音） ==================== */
+function hasTruePitchWithinTwoMainBeats(trueGroups, idx, twoMainBeatsTicks) {
+  const target = trueGroups[idx];
+  const tStart = target.startTick;
+  const tEnd = target.startTick + target.ticks;
+  for (let j = 0; j < trueGroups.length; j++) {
+    if (j === idx) continue;
+    const other = trueGroups[j];
+    if (other.midi !== target.midi) continue;
+    const oStart = other.startTick;
+    const oEnd = other.startTick + other.ticks;
+    if (oStart < tEnd + twoMainBeatsTicks && oEnd > tStart - twoMainBeatsTicks) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function injectScoreErrors(key, clef, timeSig, trueGroups) {
+  const errCount = pick([3, 4, 5]);
+  const twoMainBeatsTicks = 2 * TIME_CONFIG[timeSig].beatSize;
+  const candidates = [];
+  for (let i = 1; i < trueGroups.length - 1; i++) {
+    if (candidates.length > 0 && candidates[candidates.length - 1] === i - 1 && trueGroups[i].ticks === 1) continue;
+    candidates.push(i);
+  }
+
+  for (let i = candidates.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [candidates[i], candidates[j]] = [candidates[j], candidates[i]];
+  }
+  candidates.sort((a, b) => {
+    const na = hasTruePitchWithinTwoMainBeats(trueGroups, a, twoMainBeatsTicks) ? 1 : 0;
+    const nb = hasTruePitchWithinTwoMainBeats(trueGroups, b, twoMainBeatsTicks) ? 1 : 0;
+    return na - nb;
+  });
+
+  const wrongSet = new Set();
+  let nearbyRefCount = 0;
+  const scoreGroups = trueGroups.map(g => ({ ...g }));
+
+  for (let pass = 0; pass < 2 && wrongSet.size < errCount; pass++) {
+    for (const idx of candidates) {
+      if (wrongSet.size >= errCount) break;
+      if (wrongSet.has(idx)) continue;
+      const isNearbyRef = hasTruePitchWithinTwoMainBeats(trueGroups, idx, twoMainBeatsTicks);
+      if (pass === 0 && isNearbyRef && nearbyRefCount >= 1) continue;
+
+      const orig = trueGroups[idx];
+      const traps = [
+        { step: orig.step, alt: orig.alt === 0 ? pick([1, -1]) : 0 },
+        { step: orig.step + 1, alt: 0 },
+        { step: orig.step - 1, alt: 0 },
+        { step: orig.step + 2, alt: 0 },
+        { step: orig.step - 2, alt: 0 }
+      ];
+      traps.sort(() => Math.random() - 0.5);
+
+      for (const tr of traps) {
+        if (!inClefRange(key, clef, tr.step, tr.alt)) continue;
+        const newMidi = getMidi(key, clef, tr.step, tr.alt);
+        if (newMidi === orig.midi) continue;
+        if (idx > 0 && newMidi === scoreGroups[idx - 1].midi) continue;
+        if (idx + 1 < scoreGroups.length && newMidi === scoreGroups[idx + 1].midi) continue;
+
+        if (pass === 0) {
+          const testMidis = scoreGroups.map((g, k) => k === idx ? newMidi : g.midi);
+          const rep = analyzePitchRepetitions(testMidis);
+          if (rep.directTriplePlaces > 1 || rep.maxSameRun > 3) continue;
+          if (rep.twoNoteOscPlaces > 0 || rep.hasFiveOsc) continue;
+        }
+
+        const sp = spellNote(key, clef, tr.step, tr.alt);
+        scoreGroups[idx].step = tr.step;
+        scoreGroups[idx].alt = tr.alt;
+        scoreGroups[idx].midi = sp.midi;
+        scoreGroups[idx].vfKey = sp.vfKey;
+        scoreGroups[idx].dispName = sp.dispName;
+        wrongSet.add(idx);
+        if (isNearbyRef) nearbyRefCount++;
+        break;
+      }
+    }
+  }
+
+  return { scoreGroups, wrongGroupIds: wrongSet };
+}
+
+/* ==================== 7. 標準切分音視譜拆分解碼器 ==================== */
+function splitGroupsToVisualMeasures(groups, timeSig) {
+  const cfg = TIME_CONFIG[timeSig];
+  const measures = Array.from({ length: 8 }, () => []);
+  const ties = [];
+
+  const durMap = {
+    1:  { dur: '16', dots: 0 },
+    2:  { dur: '8',  dots: 0 },
+    3:  { dur: '8',  dots: 1 },
+    4:  { dur: 'q',  dots: 0 },
+    6:  { dur: 'q',  dots: 1 },
+    8:  { dur: 'h',  dots: 0 },
+    12: { dur: 'h',  dots: 1 },
+    16: { dur: 'w',  dots: 0 }
+  };
+
+  const barSlices = Array.from({ length: 8 }, () => []);
+  for (const g of groups) {
+    let rem = g.ticks;
+    let curTick = g.startTick;
+    let partIdx = 0;
+    while (rem > 0) {
+      const barIdx = Math.floor(curTick / cfg.ticksPerBar);
+      const tickInBar = curTick % cfg.ticksPerBar;
+      const ticksLeftInBar = cfg.ticksPerBar - tickInBar;
+      const inBarLen = Math.min(rem, ticksLeftInBar);
+      barSlices[barIdx].push({
+        groupId: g.groupId,
+        vfKey: g.vfKey,
+        barIdx,
+        tickInBar,
+        len: inBarLen,
+        isContinuationFromPrevBar: partIdx > 0
+      });
+      rem -= inBarLen;
+      curTick += inBarLen;
+      partIdx++;
+    }
+  }
+
+  const lastVisualIdByGroup = {};
+  let visualId = 0;
+
+  for (let m = 0; m < 8; m++) {
+    const slices = barSlices[m];
+    const sigStr = slices.map(s => s.len).join(',');
+    const isWholeBarSymSync = (timeSig === '4/4' && sigStr === '4,8,4');
+    const isWholeBarOffbeat = (timeSig === '4/4' && sigStr === '2,4,4,4,2') ||
+                              (timeSig === '3/4' && sigStr === '2,4,2');
+
+    for (const sl of slices) {
+      let rem = sl.len;
+      let pos = sl.tickInBar;
+
+      while (rem > 0) {
+        let maxChunk = rem;
+
+        if (cfg.beatSize === 4) {
+          const beatRem = 4 - (pos % 4);
+          const is16thSyncopation = (pos % 2 !== 0) || (rem % 2 !== 0);
+          if (is16thSyncopation && beatRem < 4 && maxChunk > beatRem) {
+            maxChunk = beatRem;
+          }
+          else if (timeSig === '4/4' && pos < 8 && pos + maxChunk > 8) {
+            if (!isWholeBarSymSync && !isWholeBarOffbeat) {
+              maxChunk = 8 - pos;
+            }
+          }
+          else if (timeSig === '3/4' && pos === 4 && rem === 6 && sigStr === '4,6,2') {
+            maxChunk = 4;
+          }
+        } else {
+          const compRem = 6 - (pos % 6);
+          if (pos % 6 !== 0 && maxChunk > compRem) {
+            maxChunk = compRem;
+          }
+        }
+
+        const validSizes = Object.keys(durMap).map(Number).filter(x => x <= maxChunk).sort((a, b) => b - a);
+        const chunk = validSizes[0];
+        const spec = durMap[chunk];
+
+        const vNote = {
+          visualId,
+          groupId: sl.groupId,
+          bar: m,
+          vfKey: sl.vfKey,
+          dur: spec.dur,
+          dots: spec.dots,
+          ticks: chunk
+        };
+        measures[m].push(vNote);
+
+        const prevVid = lastVisualIdByGroup[sl.groupId];
+        if (prevVid !== undefined) {
+          ties.push({
+            fromVid: prevVid,
+            toVid: visualId
+          });
+        }
+        lastVisualIdByGroup[sl.groupId] = visualId;
+        visualId++;
+        rem -= chunk;
+        pos += chunk;
+      }
+    }
+  }
+
+  return { measures, ties };
+}
+
+/* ==================== 8. 應用程式狀態管理 ==================== */
+const STATE = {
+  question: null,
+  mode: 'error',
+  selectedWrong: new Set(),
+  graded: false,
+  inspectTrue: false,
+  revealedDict: false,
+  showAnalysis: false,
+  playCount: 0,
+  transportState: 'stopped',
+  lastRenderW: 0
+};
+
+function getDiffName(diff) {
+  return diff === '1' ? '基礎練習' : '進階練習';
+}
+
+function initDropdowns() {
+  $('selKey').innerHTML = '<option value="random">隨機調性（大調／小調）</option>' +
+    KEYS.map(k => `<option value="${k.id}">${k.name}</option>`).join('');
+  updateInstrumentOptions();
+}
+
+function updateInstrumentOptions() {
+  const clef = $('selClef').value;
+  const curVal = $('selInst').value;
+  const list = CLEF_INSTS[clef];
+  $('selInst').innerHTML = list.map(x => `<option value="${x.id}">${x.name}</option>`).join('');
+  if (list.some(x => x.id === curVal)) $('selInst').value = curVal;
+}
+
+function checkPendingSettings() {
+  if (!STATE.question) return;
+  const diff = $('selDiff').value !== STATE.question.diff ||
+               $('selClef').value !== STATE.question.clef ||
+               $('selTime').value !== STATE.question.timeSig ||
+               ($('selKey').value !== 'random' && $('selKey').value !== STATE.question.key.id);
+  $('pendingHint').hidden = !diff;
+}
+
+function hideStampUI() {
+  $('gradeStampBanner').hidden = true;
+  $('scoreStampOverlay').hidden = true;
+  $('scoreStampOverlay').innerHTML = '';
+}
+
+function generateNewQuestion() {
+  stopPlayback();
+  const diff = $('selDiff').value;
+  const clef = $('selClef').value;
+  const timeSig = $('selTime').value;
+  const keyChoice = $('selKey').value;
+  const key = keyChoice === 'random' ? pick(KEYS) : KEYS.find(k => k.id === keyChoice);
+
+  updateInstrumentOptions();
+  if (liveChain) buildInstrumentSynth($('selInst').value);
+
+  let composed = null;
+  for (let i = 0; i < 40; i++) {
+    composed = composeMelody(key, clef, timeSig, diff);
+    if (composed) break;
+  }
+  if (!composed) {
+    alert('生成題目時發生忙碌，請再按一次「生成新題目」。');
+    return;
+  }
+
+  const { scoreGroups, wrongGroupIds } = injectScoreErrors(key, clef, timeSig, composed.trueGroups);
+
+  STATE.question = {
+    diff,
+    key,
+    clef,
+    timeSig,
+    harmony: composed.harmony,
+    trueGroups: composed.trueGroups,
+    scoreGroups,
+    wrongGroupIds,
+    climaxBar: composed.climaxBar,
+    climaxNote: composed.climaxNote
+  };
+  STATE.selectedWrong.clear();
+  STATE.graded = false;
+  STATE.inspectTrue = false;
+  STATE.revealedDict = false;
+  STATE.showAnalysis = false;
+  STATE.playCount = 0;
+
+  $('chkShowAnalysis').checked = false;
+  $('pendingHint').hidden = true;
+  $('curMeta').textContent = `🎵 目前題目：${getDiffName(diff)}｜${key.name}｜${timeSig} 拍｜${CLEF_RANGE[clef].label}`;
+  $('playCounter').textContent = `🎧 已播放次數：0 次`;
+  $('gradeSummary').textContent = '';
+  $('btnToggleInspect').hidden = true;
+  hideStampUI();
+
+  syncModeUI();
+  renderScore();
+  renderAnalysis();
+}
+
+/* ==================== 9. VexFlow 自適應繪譜與精準 Hitbox 互動 ==================== */
+function renderScore() {
+  const q = STATE.question;
+  if (!q) return;
+
+  const { Renderer, Stave, StaveNote, GhostNote, Voice, Formatter, Beam, StaveTie, Accidental, Dot, Fraction } = Vex.Flow;
+  const endBarType = Vex.Flow.BarlineType ? Vex.Flow.BarlineType.END : Vex.Flow.Barline.type.END;
+  const host = $('score');
+  host.innerHTML = '';
+  const ov = $('ov');
+  ov.innerHTML = '';
+
+  const paperEl = $('paperBox');
+  const availW = Math.max(540, Math.floor((paperEl ? paperEl.clientWidth : 1120) - 6));
+  STATE.lastRenderW = availW;
+
+  const barsPerLine = availW < 860 ? 2 : 4;
+  const numSystems = 8 / barsPerLine;
+  const canvasW = availW;
+  const rowGap = 194;
+  const canvasH = numSystems * rowGap + 50;
+
+  const wrap = $('wrap');
+  wrap.style.width = `${canvasW}px`;
+  wrap.style.height = `${canvasH}px`;
+
+  const marginL = 12;
+  const marginR = 14;
+  const usableW = canvasW - marginL - marginR;
+  const firstColExtra = 64;
+  const baseColW = Math.floor((usableW - firstColExtra) / barsPerLine);
+
+  const sysX = [];
+  const sysW = [];
+  let cursorX = marginL;
+  for (let c = 0; c < barsPerLine; c++) {
+    const w = baseColW + (c === 0 ? firstColExtra : 0);
+    sysX.push(cursorX);
+    sysW.push(w);
+    cursorX += w;
+  }
+
+  const renderer = new Renderer(host, Renderer.Backends.SVG);
+  renderer.resize(canvasW, canvasH);
+  const ctx = renderer.getContext();
+
+  const useTrue = (STATE.mode === 'analysis') ||
+                  (STATE.mode === 'dictation' && STATE.revealedDict) ||
+                  (STATE.mode === 'error' && STATE.graded && STATE.inspectTrue);
+
+  const activeGroups = useTrue ? q.trueGroups : q.scoreGroups;
+  const { measures, ties } = splitGroupsToVisualMeasures(activeGroups, q.timeSig);
+  const cfg = TIME_CONFIG[q.timeSig];
+  const safeDiatonicKey = q.trueGroups[0]?.vfKey || 'c/4';
+
+  const visualStaveNotes = {};
+
+  const isNoteVisibleInDictation = vn => {
+    if (vn.bar === 0) return true;
+    const origGroup = q.trueGroups[vn.groupId];
+    return origGroup && origGroup.bar === 0;
+  };
+
+  for (let m = 0; m < 8; m++) {
+    const sys = Math.floor(m / barsPerLine);
+    const col = m % barsPerLine;
+    const y = 46 + sys * rowGap;
+    const stave = new Stave(sysX[col], y, sysW[col]);
+
+    if (col === 0) {
+      stave.addClef(q.clef).addKeySignature(q.key.sig);
+      if (m === 0) stave.addTimeSignature(q.timeSig);
+    }
+    if (m === 7) stave.setEndBarType(endBarType);
+    stave.setContext(ctx).draw();
+
+    const barTag = document.createElement('div');
+    barTag.className = 'bar-tag' + (m % 2 === 1 ? ' alt' : '');
+    barTag.textContent = `m.${m + 1}`;
+    barTag.style.left = `${sysX[col] + (col === 0 ? 6 : 2)}px`;
+    barTag.style.top = `${y - 22}px`;
+    barTag.style.transform = `rotate(${m % 2 === 0 ? -2.2 : 1.8}deg)`;
+    ov.appendChild(barTag);
+
+    const mNotes = measures[m];
+    const vfNotes = mNotes.map(vn => {
+      if (STATE.mode === 'dictation' && !STATE.revealedDict && !isNoteVisibleInDictation(vn)) {
+        const gn = new GhostNote({ duration: vn.dur, dots: vn.dots });
+        gn.keys = [safeDiatonicKey];
+        return gn;
+      }
+      const sn = new StaveNote({
+        keys: [vn.vfKey],
+        duration: vn.dur,
+        dots: vn.dots,
+        clef: q.clef,
+        auto_stem: true
+      });
+      for (let d = 0; d < vn.dots; d++) Dot.buildAndAttach([sn], { all: true });
+
+      if (STATE.mode === 'error' && STATE.graded && !STATE.inspectTrue) {
+        const isActualWrong = q.wrongGroupIds.has(vn.groupId);
+        const isUserSel = STATE.selectedWrong.has(vn.groupId);
+        if (isActualWrong && isUserSel) {
+          sn.setStyle({ fillStyle: '#247a48', strokeStyle: '#247a48' });
+        } else if (isActualWrong && !isUserSel) {
+          sn.setStyle({ fillStyle: '#d93829', strokeStyle: '#d93829' });
+        } else if (!isActualWrong && isUserSel) {
+          sn.setStyle({ fillStyle: '#d47a17', strokeStyle: '#d47a17' });
+        }
+      }
+
+      visualStaveNotes[vn.visualId] = { staveNote: sn, groupId: vn.groupId, bar: m };
+      return sn;
+    });
+
+    const voice = new Voice({ num_beats: cfg.numBeats, beat_value: cfg.beatValue }).setStrict(false);
+    voice.addTickables(vfNotes);
+
+    const visibleNotes = vfNotes.filter(n => !(n instanceof GhostNote));
+    if (visibleNotes.length > 0) {
+      Accidental.applyAccidentals([voice], q.key.sig);
+    }
+
+    const beamGroups = [new Fraction(cfg.beamGroups[0], cfg.beamGroups[1])];
+    const beams = visibleNotes.length > 0
+      ? Beam.generateBeams(visibleNotes, { groups: beamGroups })
+      : [];
+
+    const padW = col === 0 ? (m === 0 ? 118 : 96) : 28;
+    new Formatter().joinVoices([voice]).format([voice], Math.max(80, sysW[col] - padW));
+    voice.draw(ctx, stave);
+    beams.forEach(b => b.setContext(ctx).draw());
+  }
+
+  for (const t of ties) {
+    const entry1 = visualStaveNotes[t.fromVid];
+    const entry2 = visualStaveNotes[t.toVid];
+    if (!entry1 || !entry2) continue;
+    const n1 = entry1.staveNote;
+    const n2 = entry2.staveNote;
+    const isCrossLine = Math.floor(entry1.bar / barsPerLine) !== Math.floor(entry2.bar / barsPerLine);
+    if (isCrossLine) {
+      new StaveTie({ first_note: n1, last_note: null, first_indices: [0], last_indices: [0] }).setContext(ctx).draw();
+      new StaveTie({ first_note: null, last_note: n2, first_indices: [0], last_indices: [0] }).setContext(ctx).draw();
+    } else {
+      new StaveTie({ first_note: n1, last_note: n2, first_indices: [0], last_indices: [0] }).setContext(ctx).draw();
+    }
+  }
+
+  Object.values(visualStaveNotes).forEach(({ staveNote, groupId }) => {
+    const x = staveNote.getNoteHeadBeginX() + 5;
+    const y = staveNote.getYs()[0];
+    const hit = document.createElement('div');
+    hit.className = 'nh-hit';
+    hit.dataset.gid = groupId;
+    hit.style.left = `${x}px`;
+    hit.style.top = `${y}px`;
+
+    if (STATE.mode === 'error') {
+      const isUserSel = STATE.selectedWrong.has(groupId);
+      const isActualWrong = q.wrongGroupIds.has(groupId);
+
+      if (!STATE.graded) {
+        if (isUserSel) hit.classList.add('user-sel');
+        hit.onclick = () => {
+          if (groupId === 0) return;
+          if (STATE.selectedWrong.has(groupId)) STATE.selectedWrong.delete(groupId);
+          else STATE.selectedWrong.add(groupId);
+          updateSelectionStatus();
+          renderScore();
+        };
+      } else if (!STATE.inspectTrue) {
+        if (isActualWrong && isUserSel) hit.classList.add('res-caught');
+        else if (isActualWrong && !isUserSel) hit.classList.add('res-missed');
+        else if (!isActualWrong && isUserSel) hit.classList.add('res-false');
+      }
+    }
+    ov.appendChild(hit);
+  });
+}
+
+function updateSelectionStatus() {
+  if (STATE.mode === 'error' && !STATE.graded && STATE.question) {
+    const total = STATE.question.wrongGroupIds.size;
+    $('gradeSummary').textContent = `🖍️ 已標記 ${STATE.selectedWrong.size} 個疑似錯音（本題共有 ${total} 個錯音）`;
+  }
+}
+
+/* ==================== 10. 樂曲結構與和聲外音解析表 ==================== */
+function renderAnalysis() {
+  const q = STATE.question;
+  if (!q) return;
+
+  $('analysisCard').hidden = !STATE.showAnalysis;
+  if (!STATE.showAnalysis) return;
+
+  const formNames = {
+    sentence: '2+2+4 樂句型（Sentence，第 3 小節動機模進、跨小節推進）',
+    asymmetric: '3+3+2 非對稱推進樂句（破除制式 4+4 停頓）',
+    arch: '2+3+3 連續拱形樂句（單向線條推向中後段最高點）'
+  };
+  const chrTags = [...new Set(q.harmony.flatMap(h => (h.chrTag || '').split('；')).filter(x => x && !x.startsWith('臨時轉調')))];
+
+  $('metaGrid').innerHTML = `
+    <div class="meta-item"><b>難度與調性：</b>${getDiffName(q.diff)}｜${q.key.name}（${q.timeSig} 拍）｜${CLEF_RANGE[q.clef].label}</div>
+    <div class="meta-item"><b>樂句與動機：</b>${formNames[q.harmony.formType] || ''}；唯一最高點位於 <b>第 ${q.climaxBar} 小節（${q.climaxNote}）</b></div>
+    <div class="meta-item"><b>調性佈局（首尾同調）：</b>${q.harmony.modInfo || ''}</div>
+    <div class="meta-item"><b>包含特色和弦：</b>${chrTags.join('、') || '調內功能進行'}</div>
+  `;
+
+  $('analysisBody').innerHTML = q.harmony.map((h, bIdx) => {
+    const barGroups = q.trueGroups.filter(g => g.bar === bIdx);
+    const details = barGroups.map(g => {
+      if (g.nctType) {
+        return `<span class="tag nct">${g.nctType}</span><b>${g.dispName}</b>：${g.nctDesc}${g.accent ? ' ▲加重' : ''}`;
+      }
+      if (g.alt !== 0) {
+        return `<span class="tag chr">變化音</span><b>${g.dispName}</b>：${g.nctDesc}${g.accent ? ' ▲加重' : ''}`;
+      }
+      return null;
+    }).filter(Boolean);
+
+    return `
+      <tr>
+        <td><b>第 ${bIdx + 1} 小節</b></td>
+        <td><b>${h.label}</b></td>
+        <td>${h.role}</td>
+        <td>${details.length ? details.join('<br>') : '和聲骨幹音級進與小跳進行'}</td>
+      </tr>
+    `;
+  }).join('');
+}
+
+/* ==================== 11. Tone.js 擬真樂器合成與即時播放 ==================== */
+let liveChain = null;
+
+function disposeChain(chain) {
+  if (!chain) return;
+  if (chain.synth) chain.synth.dispose();
+  if (chain.bodyBoost) chain.bodyBoost.dispose();
+  if (chain.filter) chain.filter.dispose();
+  if (chain.vibrato) chain.vibrato.dispose();
+}
+
+function createInstrumentChain(instId, destination) {
+  const vibrato = new Tone.Vibrato({ frequency: 5.2, depth: 0.08 }).connect(destination);
+  let filter = null;
+  let bodyBoost = null;
+  let synth = null;
+
+  if (instId === 'flute') {
+    vibrato.depth.value = 0.06;
+    filter = new Tone.Filter(3200, 'lowpass').connect(vibrato);
+    synth = new Tone.Synth({
+      oscillator: { type: 'sine' },
+      envelope: { attack: 0.055, decay: 0.15, sustain: 0.85, release: 0.25 }
+    }).connect(filter);
+    synth.volume.value = -3;
+  } else if (instId === 'violin') {
+    vibrato.depth.value = 0.11;
+    filter = new Tone.Filter(3000, 'lowpass').connect(vibrato);
+    synth = new Tone.Synth({
+      oscillator: { type: 'fatsawtooth', count: 3, spread: 12 },
+      envelope: { attack: 0.06, decay: 0.2, sustain: 0.85, release: 0.3 }
+    }).connect(filter);
+    synth.volume.value = -7;
+  } else if (instId === 'cello') {
+    vibrato.depth.value = 0.09;
+    filter = new Tone.Filter(3400, 'lowpass').connect(vibrato);
+    bodyBoost = new Tone.Filter({ frequency: 850, type: 'peaking', Q: 1.8, gain: 6 }).connect(filter);
+    synth = new Tone.Synth({
+      oscillator: { type: 'sawtooth' },
+      envelope: { attack: 0.035, decay: 0.2, sustain: 0.88, release: 0.3 }
+    }).connect(bodyBoost);
+    synth.volume.value = 2;
+  } else if (instId === 'bass_clarinet') {
+    vibrato.depth.value = 0.05;
+    filter = new Tone.Filter(2400, 'lowpass').connect(vibrato);
+    synth = new Tone.Synth({
+      oscillator: { type: 'square' },
+      envelope: { attack: 0.035, decay: 0.2, sustain: 0.85, release: 0.25 }
+    }).connect(filter);
+    synth.volume.value = -2;
+  } else {
+    vibrato.depth.value = 0;
+    filter = new Tone.Filter(3800, 'lowpass').connect(vibrato);
+    synth = new Tone.PolySynth(Tone.Synth, {
+      oscillator: { type: 'triangle' },
+      envelope: { attack: 0.008, decay: 0.55, sustain: 0.32, release: 0.75 }
+    }).connect(filter);
+    synth.volume.value = -1;
+  }
+
+  return { synth, vibrato, filter, bodyBoost };
+}
+
+function buildInstrumentSynth(instId) {
+  disposeChain(liveChain);
+  liveChain = createInstrumentChain(instId, Tone.getDestination());
+}
+
+async function playTonicCadence() {
+  const q = STATE.question;
+  if (!q) return;
+  stopPlayback();
+  await Tone.start();
+
+  const p = new Tone.PolySynth(Tone.Synth, {
+    oscillator: { type: 'triangle' },
+    envelope: { attack: 0.015, decay: 0.4, sustain: 0.35, release: 0.6 }
+  }).toDestination();
+  p.volume.value = -4;
+
+  const bt = getBaseTonicMidi(q.key, q.clef);
+  const third = q.key.md === 'M' ? 4 : 3;
+  const f = m => Tone.Frequency(m, 'midi').toFrequency();
+  const now = Tone.now() + 0.04;
+
+  p.triggerAttackRelease([f(bt), f(bt + third), f(bt + 7)], '4n', now);
+  p.triggerAttackRelease([f(bt - 1), f(bt + 5), f(bt + 7)], '4n', now + 0.55);
+  p.triggerAttackRelease([f(bt), f(bt + third), f(bt + 7), f(bt + 12)], '2n', now + 1.1);
+  setTimeout(() => p.dispose(), 2600);
+}
+
+function highlightPlayingGroup(gid) {
+  document.querySelectorAll('.nh-hit').forEach(el => {
+    el.classList.toggle('playing', +el.dataset.gid === gid);
+  });
+}
+
+function schedulePlayback() {
+  const q = STATE.question;
+  if (!q) return;
+  const T = Tone.Transport;
+  T.cancel();
+
+  const bpm = +$('rngBpm').value;
+  T.bpm.value = bpm;
+  const sixteenthSec = (60 / bpm) / 4;
+
+  for (const g of q.trueGroups) {
+    const startSec = g.startTick * sixteenthSec;
+    const durSec = Math.max(0.06, g.ticks * sixteenthSec * 0.95);
+    const freq = Tone.Frequency(g.midi, 'midi').toFrequency();
+
+    T.schedule(time => {
+      if (liveChain && liveChain.synth) {
+        liveChain.synth.triggerAttackRelease(freq, durSec * (g.durMul || 1), time, g.vel || 0.75);
+      }
+      Tone.Draw.schedule(() => highlightPlayingGroup(g.groupId), time);
+    }, startSec);
+  }
+
+  const totalTicks = 8 * TIME_CONFIG[q.timeSig].ticksPerBar;
+  const endSec = totalTicks * sixteenthSec + 0.15;
+  T.schedule(time => {
+    Tone.Draw.schedule(() => {
+      stopPlayback();
+    }, time);
+  }, endSec);
+}
+
+function stopPlayback() {
+  if (window.Tone) {
+    Tone.Transport.stop();
+    Tone.Transport.cancel();
+  }
+  if (liveChain && liveChain.synth && liveChain.synth.releaseAll) {
+    liveChain.synth.releaseAll();
+  }
+  highlightPlayingGroup(-1);
+  STATE.transportState = 'stopped';
+}
+
+/* ==================== 12. 事件綁定 ==================== */
+function syncModeUI() {
+  $('errorControls').hidden = STATE.mode !== 'error';
+  $('legendBar').hidden = STATE.mode !== 'error';
+  $('dictControls').hidden = STATE.mode !== 'dictation';
+  if (STATE.mode !== 'error') {
+    $('gradeStampBanner').hidden = true;
+    $('scoreStampOverlay').hidden = true;
+  } else if (STATE.graded) {
+    $('gradeStampBanner').hidden = false;
+    $('scoreStampOverlay').hidden = false;
+  }
+  updateSelectionStatus();
+}
+
+$('btnGen').onclick = generateNewQuestion;
+$('btnCadence').onclick = playTonicCadence;
+
+$('selDiff').onchange = checkPendingSettings;
+$('selClef').onchange = () => {
+  updateInstrumentOptions();
+  if (liveChain) buildInstrumentSynth($('selInst').value);
+  checkPendingSettings();
+};
+$('selTime').onchange = checkPendingSettings;
+$('selKey').onchange = checkPendingSettings;
+
+$('selInst').onchange = () => {
+  if (liveChain) buildInstrumentSynth($('selInst').value);
+};
+
+$('rngBpm').oninput = e => {
+  $('lblBpm').textContent = e.target.value;
+  if (window.Tone) Tone.Transport.bpm.value = +e.target.value;
+};
+
+$('btnPlay').onclick = async () => {
+  await Tone.start();
+  if (!liveChain) buildInstrumentSynth($('selInst').value);
+
+  if (STATE.transportState === 'paused') {
+    Tone.Transport.start();
+    STATE.transportState = 'playing';
+  } else {
+    Tone.Transport.stop();
+    schedulePlayback();
+    STATE.playCount += 1;
+    $('playCounter').textContent = `🎧 已播放次數：${STATE.playCount} 次`;
+    Tone.Transport.start('+0.05');
+    STATE.transportState = 'playing';
+  }
+};
+
+$('btnPause').onclick = () => {
+  if (STATE.transportState === 'playing') {
+    Tone.Transport.pause();
+    if (liveChain && liveChain.synth && liveChain.synth.releaseAll) {
+      liveChain.synth.releaseAll();
+    }
+    STATE.transportState = 'paused';
+  }
+};
+
+$('btnStop').onclick = stopPlayback;
+
+document.querySelectorAll('input[name="mode"]').forEach(radio => {
+  radio.onchange = () => {
+    STATE.mode = radio.value;
+    syncModeUI();
+    renderScore();
+  };
+});
+
+$('chkShowAnalysis').onchange = e => {
+  STATE.showAnalysis = e.target.checked;
+  renderAnalysis();
+  if (STATE.showAnalysis) {
+    $('analysisCard').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+};
+
+$('btnCloseAnalysis').onclick = () => {
+  STATE.showAnalysis = false;
+  $('chkShowAnalysis').checked = false;
+  renderAnalysis();
+};
+
+$('btnRevealDict').onclick = () => {
+  STATE.revealedDict = !STATE.revealedDict;
+  renderScore();
+};
+
+$('btnClearSel').onclick = () => {
+  if (STATE.graded) return;
+  STATE.selectedWrong.clear();
+  updateSelectionStatus();
+  renderScore();
+};
+
+$('btnGrade').onclick = () => {
+  const q = STATE.question;
+  if (!q || STATE.graded) return;
+  STATE.graded = true;
+  STATE.inspectTrue = false;
+
+  let caught = 0;
+  let falseAlarm = 0;
+  q.wrongGroupIds.forEach(gid => {
+    if (STATE.selectedWrong.has(gid)) caught++;
+  });
+  STATE.selectedWrong.forEach(gid => {
+    if (!q.wrongGroupIds.has(gid)) falseAlarm++;
+  });
+  const totalWrong = q.wrongGroupIds.size;
+  const missed = totalWrong - caught;
+  const isAllCorrect = (missed === 0 && falseAlarm === 0);
+
+  $('gradeSummary').textContent =
+    `抓對 ${caught} / ${totalWrong} 個錯音｜漏抓 ${missed} 個｜誤判 ${falseAlarm} 個`;
+  $('btnToggleInspect').hidden = false;
+  $('btnToggleInspect').textContent = '切換檢視：目前為「測驗標記譜面」';
+
+  const banner = $('gradeStampBanner');
+  banner.hidden = false;
+  banner.classList.remove('all-ok', 'has-err');
+  banner.classList.add(isAllCorrect ? 'all-ok' : 'has-err');
+
+  if (isAllCorrect) {
+    $('stampBannerTitle').textContent = '🎉 恭喜全對！獲得「好寶寶」印章！';
+    $('stampBannerDesc').textContent =
+      `精準抓出全部 ${totalWrong} 個錯音、零誤判（共播放 ${STATE.playCount} 次），耳朵超靈敏！`;
+  } else {
+    $('stampBannerTitle').textContent = '💪 蓋上「一起加油」章！再聽一次對照看看吧～';
+    $('stampBannerDesc').textContent =
+      `本次抓對 ${caught} / ${totalWrong} 個錯音（漏抓 ${missed} 個、誤判 ${falseAlarm} 個｜共播放 ${STATE.playCount} 次），可切換「正確原譜」或開啟解析核對喔！`;
+  }
+
+  const stampSvg = buildStampSVG(isAllCorrect, caught, totalWrong);
+  $('stampBannerSvg').innerHTML = stampSvg;
+  $('stampBannerSvg').style.animation = 'none';
+  void $('stampBannerSvg').offsetWidth;
+  $('stampBannerSvg').style.animation = '';
+
+  const scoreStamp = $('scoreStampOverlay');
+  scoreStamp.innerHTML = stampSvg;
+  scoreStamp.hidden = false;
+  scoreStamp.style.animation = 'none';
+  void scoreStamp.offsetWidth;
+  scoreStamp.style.animation = '';
+
+  playStampChime(isAllCorrect);
+  renderScore();
+};
+
+$('btnToggleInspect').onclick = () => {
+  STATE.inspectTrue = !STATE.inspectTrue;
+  $('btnToggleInspect').textContent = STATE.inspectTrue
+    ? '切換檢視：目前為「正確原譜」'
+    : '切換檢視：目前為「測驗標記譜面」';
+  renderScore();
+};
+
+if (window.ResizeObserver) {
+  const ro = new ResizeObserver(() => {
+    if (!STATE.question) return;
+    const curW = Math.max(540, Math.floor($('paperBox').clientWidth - 6));
+    if (Math.abs(curW - STATE.lastRenderW) > 12) {
+      renderScore();
+    }
+  });
+  ro.observe($('paperBox'));
+}
+
+// 初始化
+initDropdowns();
+generateNewQuestion();
+</script>
+</body>
+</html>
