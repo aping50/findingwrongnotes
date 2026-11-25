@@ -220,24 +220,14 @@ label{font-size:.89rem;cursor:pointer;display:inline-flex;align-items:center;gap
 .mode-pill{
   padding:5px 12px;
   border-radius:11px;
-  background:#fbf5e8;
-  border:1.5px solid #dfd0b8;
-  transition:background .15s, border-color .15s;
-}
-.mode-pill:has(input:checked){
   background:#ffedd5;
-  border-color:#e59a54;
+  border:1.5px solid #e59a54;
   color:#7c3814;
   box-shadow:0 2px 0 #ebd0ad;
-}
-
-.toggle-analysis{
-  padding:5px 12px;
-  border-radius:11px;
-  font-weight:700;
-  background:#f2f7f1;
-  border:2px dashed #9ec4a4;
-  color:#27633b;
+  font-size:.89rem;
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
 }
 
 .badge{
@@ -441,30 +431,6 @@ label{font-size:.89rem;cursor:pointer;display:inline-flex;align-items:center;gap
 .dot.miss{border:2.5px solid #d93829;border-radius:3px;background:rgba(217,56,41,.16)}
 .dot.fal{border:2.5px dashed #d47a17;background:rgba(212,122,23,.16)}
 
-/* 解析筆記卡 */
-.analysis-card{
-  position:relative;
-  padding:16px 18px;
-  margin-top:16px;
-  font-size:.9rem;
-}
-.analysis-header{
-  display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px;
-}
-.analysis-card h2{font-size:1.04rem;margin:0;color:#7c441e}
-.meta-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:9px;margin-bottom:12px}
-.meta-item{
-  background:#fbf5e9;
-  border:1.5px dashed #d8c6a8;
-  border-radius:12px;
-  padding:8px 11px;
-}
-table{width:100%;border-collapse:collapse;font-size:.87rem;margin-top:6px;background:#fffef9}
-th,td{border:1.5px solid #e2d4be;padding:7px 9px;text-align:left;vertical-align:top}
-th{background:#f7ecda;font-weight:800;color:#5c3a1d}
-.tag{display:inline-block;padding:1px 7px;border-radius:6px;font-size:.78rem;font-weight:800;margin-right:5px}
-.tag.chr{background:#fee2e2;color:#991b1b;border:1px solid #fca5a5}
-.tag.nct{background:#e0e7ff;color:#1e40af;border:1px solid #a5b4fc}
 </style>
 </head>
 <body>
@@ -555,26 +521,16 @@ th{background:#f7ecda;font-weight:800;color:#5c3a1d}
   </svg>
 </div>
 
-<!-- 第三列：訓練模式、解析開關與聽音辨誤批閱列 -->
+<!-- 第三列：聽音辨誤模式與批閱列 -->
 <div class="bar sticker-card bar-mode">
   <div class="group">
-    <label class="mode-pill"><input type="radio" name="mode" value="error" checked> <b>聽音辨誤模式</b>（找出譜面錯音）</label>
-    <label class="mode-pill"><input type="radio" name="mode" value="dictation"> <b>純聽寫模式</b>（示首小節與連結音）</label>
-    <label class="mode-pill"><input type="radio" name="mode" value="analysis"> <b>全樂譜呈現模式</b></label>
-  </div>
-  <div class="group">
-    <label class="toggle-analysis">
-      <input type="checkbox" id="chkShowAnalysis"> 📑 顯示樂曲結構、變化和弦與外音解析
-    </label>
+    <span class="mode-pill">🎯 <b>聽音辨誤模式</b>（找出譜面錯音）</span>
   </div>
   <div class="group" id="errorControls">
     <button id="btnClearSel" class="secondary">🧹 清除標記</button>
     <button id="btnGrade" class="success">💮 送出批閱蓋章</button>
     <button id="btnToggleInspect" class="secondary" hidden>切換檢視：測驗譜面 ／ 正確原譜</button>
     <span id="gradeSummary" style="font-weight:700;font-size:.9rem;color:#5c4328"></span>
-  </div>
-  <div class="group" id="dictControls" hidden>
-    <button id="btnRevealDict" class="secondary">👁 顯示／隱藏正確全譜</button>
   </div>
 </div>
 
@@ -608,27 +564,6 @@ th{background:#f7ecda;font-weight:800;color:#5c3a1d}
       <div id="scoreStampOverlay" hidden></div>
     </div>
   </div>
-</div>
-
-<!-- 樂曲結構、變化和弦與外音解析區 -->
-<div class="analysis-card sticker-card" id="analysisCard" hidden>
-  <span class="washi corner-tl"></span>
-  <div class="analysis-header">
-    <h2>📑 樂曲結構、變化和弦與和聲外音解析筆記</h2>
-    <button id="btnCloseAnalysis" class="secondary" style="padding:4px 10px;font-size:.82rem">✕ 收合解析</button>
-  </div>
-  <div class="meta-grid" id="metaGrid"></div>
-  <table>
-    <thead>
-      <tr>
-        <th style="width:78px">小節</th>
-        <th style="width:290px">隱含和聲進行（逐拍）</th>
-        <th style="width:170px">樂句／動機功能</th>
-        <th>旋律和聲外音與變化音解決說明</th>
-      </tr>
-    </thead>
-    <tbody id="analysisBody"></tbody>
-  </table>
 </div>
 
 <script>
@@ -1934,12 +1869,9 @@ function splitGroupsToVisualMeasures(groups, timeSig) {
 /* ==================== 8. 應用程式狀態管理 ==================== */
 const STATE = {
   question: null,
-  mode: 'error',
   selectedWrong: new Set(),
   graded: false,
   inspectTrue: false,
-  revealedDict: false,
-  showAnalysis: false,
   playCount: 0,
   transportState: 'stopped',
   lastRenderW: 0
@@ -2016,11 +1948,8 @@ function generateNewQuestion() {
   STATE.selectedWrong.clear();
   STATE.graded = false;
   STATE.inspectTrue = false;
-  STATE.revealedDict = false;
-  STATE.showAnalysis = false;
   STATE.playCount = 0;
 
-  $('chkShowAnalysis').checked = false;
   $('pendingHint').hidden = true;
   $('curMeta').textContent = `🎵 目前題目：${getDiffName(diff)}｜${key.name}｜${timeSig} 拍｜${CLEF_RANGE[clef].label}`;
   $('playCounter').textContent = `🎧 已播放次數：0 次`;
@@ -2030,7 +1959,6 @@ function generateNewQuestion() {
 
   syncModeUI();
   renderScore();
-  renderAnalysis();
 }
 
 /* ==================== 9. VexFlow 自適應繪譜與精準 Hitbox 互動 ==================== */
@@ -2038,7 +1966,7 @@ function renderScore() {
   const q = STATE.question;
   if (!q) return;
 
-  const { Renderer, Stave, StaveNote, GhostNote, Voice, Formatter, Beam, StaveTie, Accidental, Dot, Fraction } = Vex.Flow;
+  const { Renderer, Stave, StaveNote, Voice, Formatter, Beam, StaveTie, Accidental, Dot, Fraction } = Vex.Flow;
   const endBarType = Vex.Flow.BarlineType ? Vex.Flow.BarlineType.END : Vex.Flow.Barline.type.END;
   const host = $('score');
   host.innerHTML = '';
@@ -2079,22 +2007,13 @@ function renderScore() {
   renderer.resize(canvasW, canvasH);
   const ctx = renderer.getContext();
 
-  const useTrue = (STATE.mode === 'analysis') ||
-                  (STATE.mode === 'dictation' && STATE.revealedDict) ||
-                  (STATE.mode === 'error' && STATE.graded && STATE.inspectTrue);
+  const useTrue = STATE.graded && STATE.inspectTrue;
 
   const activeGroups = useTrue ? q.trueGroups : q.scoreGroups;
   const { measures, ties } = splitGroupsToVisualMeasures(activeGroups, q.timeSig);
   const cfg = TIME_CONFIG[q.timeSig];
-  const safeDiatonicKey = q.trueGroups[0]?.vfKey || 'c/4';
 
   const visualStaveNotes = {};
-
-  const isNoteVisibleInDictation = vn => {
-    if (vn.bar === 0) return true;
-    const origGroup = q.trueGroups[vn.groupId];
-    return origGroup && origGroup.bar === 0;
-  };
 
   for (let m = 0; m < 8; m++) {
     const sys = Math.floor(m / barsPerLine);
@@ -2119,11 +2038,6 @@ function renderScore() {
 
     const mNotes = measures[m];
     const vfNotes = mNotes.map(vn => {
-      if (STATE.mode === 'dictation' && !STATE.revealedDict && !isNoteVisibleInDictation(vn)) {
-        const gn = new GhostNote({ duration: vn.dur, dots: vn.dots });
-        gn.keys = [safeDiatonicKey];
-        return gn;
-      }
       const sn = new StaveNote({
         keys: [vn.vfKey],
         duration: vn.dur,
@@ -2133,7 +2047,7 @@ function renderScore() {
       });
       for (let d = 0; d < vn.dots; d++) Dot.buildAndAttach([sn], { all: true });
 
-      if (STATE.mode === 'error' && STATE.graded && !STATE.inspectTrue) {
+      if (STATE.graded && !STATE.inspectTrue) {
         const isActualWrong = q.wrongGroupIds.has(vn.groupId);
         const isUserSel = STATE.selectedWrong.has(vn.groupId);
         if (isActualWrong && isUserSel) {
@@ -2152,14 +2066,13 @@ function renderScore() {
     const voice = new Voice({ num_beats: cfg.numBeats, beat_value: cfg.beatValue }).setStrict(false);
     voice.addTickables(vfNotes);
 
-    const visibleNotes = vfNotes.filter(n => !(n instanceof GhostNote));
-    if (visibleNotes.length > 0) {
+    if (vfNotes.length > 0) {
       Accidental.applyAccidentals([voice], q.key.sig);
     }
 
     const beamGroups = [new Fraction(cfg.beamGroups[0], cfg.beamGroups[1])];
-    const beams = visibleNotes.length > 0
-      ? Beam.generateBeams(visibleNotes, { groups: beamGroups })
+    const beams = vfNotes.length > 0
+      ? Beam.generateBeams(vfNotes, { groups: beamGroups })
       : [];
 
     const padW = col === 0 ? (m === 0 ? 118 : 96) : 28;
@@ -2192,79 +2105,32 @@ function renderScore() {
     hit.style.left = `${x}px`;
     hit.style.top = `${y}px`;
 
-    if (STATE.mode === 'error') {
-      const isUserSel = STATE.selectedWrong.has(groupId);
-      const isActualWrong = q.wrongGroupIds.has(groupId);
+    const isUserSel = STATE.selectedWrong.has(groupId);
+    const isActualWrong = q.wrongGroupIds.has(groupId);
 
-      if (!STATE.graded) {
-        if (isUserSel) hit.classList.add('user-sel');
-        hit.onclick = () => {
-          if (groupId === 0) return;
-          if (STATE.selectedWrong.has(groupId)) STATE.selectedWrong.delete(groupId);
-          else STATE.selectedWrong.add(groupId);
-          updateSelectionStatus();
-          renderScore();
-        };
-      } else if (!STATE.inspectTrue) {
-        if (isActualWrong && isUserSel) hit.classList.add('res-caught');
-        else if (isActualWrong && !isUserSel) hit.classList.add('res-missed');
-        else if (!isActualWrong && isUserSel) hit.classList.add('res-false');
-      }
+    if (!STATE.graded) {
+      if (isUserSel) hit.classList.add('user-sel');
+      hit.onclick = () => {
+        if (groupId === 0) return;
+        if (STATE.selectedWrong.has(groupId)) STATE.selectedWrong.delete(groupId);
+        else STATE.selectedWrong.add(groupId);
+        updateSelectionStatus();
+        renderScore();
+      };
+    } else if (!STATE.inspectTrue) {
+      if (isActualWrong && isUserSel) hit.classList.add('res-caught');
+      else if (isActualWrong && !isUserSel) hit.classList.add('res-missed');
+      else if (!isActualWrong && isUserSel) hit.classList.add('res-false');
     }
     ov.appendChild(hit);
   });
 }
 
 function updateSelectionStatus() {
-  if (STATE.mode === 'error' && !STATE.graded && STATE.question) {
+  if (!STATE.graded && STATE.question) {
     const total = STATE.question.wrongGroupIds.size;
     $('gradeSummary').textContent = `🖍️ 已標記 ${STATE.selectedWrong.size} 個疑似錯音（本題共有 ${total} 個錯音）`;
   }
-}
-
-/* ==================== 10. 樂曲結構與和聲外音解析表 ==================== */
-function renderAnalysis() {
-  const q = STATE.question;
-  if (!q) return;
-
-  $('analysisCard').hidden = !STATE.showAnalysis;
-  if (!STATE.showAnalysis) return;
-
-  const formNames = {
-    sentence: '2+2+4 樂句型（Sentence，第 3 小節動機模進、跨小節推進）',
-    asymmetric: '3+3+2 非對稱推進樂句（破除制式 4+4 停頓）',
-    arch: '2+3+3 連續拱形樂句（單向線條推向中後段最高點）'
-  };
-  const chrTags = [...new Set(q.harmony.flatMap(h => (h.chrTag || '').split('；')).filter(x => x && !x.startsWith('臨時轉調')))];
-
-  $('metaGrid').innerHTML = `
-    <div class="meta-item"><b>難度與調性：</b>${getDiffName(q.diff)}｜${q.key.name}（${q.timeSig} 拍）｜${CLEF_RANGE[q.clef].label}</div>
-    <div class="meta-item"><b>樂句與動機：</b>${formNames[q.harmony.formType] || ''}；唯一最高點位於 <b>第 ${q.climaxBar} 小節（${q.climaxNote}）</b></div>
-    <div class="meta-item"><b>調性佈局（首尾同調）：</b>${q.harmony.modInfo || ''}</div>
-    <div class="meta-item"><b>包含特色和弦：</b>${chrTags.join('、') || '調內功能進行'}</div>
-  `;
-
-  $('analysisBody').innerHTML = q.harmony.map((h, bIdx) => {
-    const barGroups = q.trueGroups.filter(g => g.bar === bIdx);
-    const details = barGroups.map(g => {
-      if (g.nctType) {
-        return `<span class="tag nct">${g.nctType}</span><b>${g.dispName}</b>：${g.nctDesc}${g.accent ? ' ▲加重' : ''}`;
-      }
-      if (g.alt !== 0) {
-        return `<span class="tag chr">變化音</span><b>${g.dispName}</b>：${g.nctDesc}${g.accent ? ' ▲加重' : ''}`;
-      }
-      return null;
-    }).filter(Boolean);
-
-    return `
-      <tr>
-        <td><b>第 ${bIdx + 1} 小節</b></td>
-        <td><b>${h.label}</b></td>
-        <td>${h.role}</td>
-        <td>${details.length ? details.join('<br>') : '和聲骨幹音級進與小跳進行'}</td>
-      </tr>
-    `;
-  }).join('');
 }
 
 /* ==================== 11. Tone.js 擬真樂器合成與即時播放 ==================== */
@@ -2410,13 +2276,7 @@ function stopPlayback() {
 
 /* ==================== 12. 事件綁定 ==================== */
 function syncModeUI() {
-  $('errorControls').hidden = STATE.mode !== 'error';
-  $('legendBar').hidden = STATE.mode !== 'error';
-  $('dictControls').hidden = STATE.mode !== 'dictation';
-  if (STATE.mode !== 'error') {
-    $('gradeStampBanner').hidden = true;
-    $('scoreStampOverlay').hidden = true;
-  } else if (STATE.graded) {
+  if (STATE.graded) {
     $('gradeStampBanner').hidden = false;
     $('scoreStampOverlay').hidden = false;
   }
@@ -2473,33 +2333,6 @@ $('btnPause').onclick = () => {
 
 $('btnStop').onclick = stopPlayback;
 
-document.querySelectorAll('input[name="mode"]').forEach(radio => {
-  radio.onchange = () => {
-    STATE.mode = radio.value;
-    syncModeUI();
-    renderScore();
-  };
-});
-
-$('chkShowAnalysis').onchange = e => {
-  STATE.showAnalysis = e.target.checked;
-  renderAnalysis();
-  if (STATE.showAnalysis) {
-    $('analysisCard').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  }
-};
-
-$('btnCloseAnalysis').onclick = () => {
-  STATE.showAnalysis = false;
-  $('chkShowAnalysis').checked = false;
-  renderAnalysis();
-};
-
-$('btnRevealDict').onclick = () => {
-  STATE.revealedDict = !STATE.revealedDict;
-  renderScore();
-};
-
 $('btnClearSel').onclick = () => {
   if (STATE.graded) return;
   STATE.selectedWrong.clear();
@@ -2542,7 +2375,7 @@ $('btnGrade').onclick = () => {
   } else {
     $('stampBannerTitle').textContent = '💪 蓋上「一起加油」章！再聽一次對照看看吧～';
     $('stampBannerDesc').textContent =
-      `本次抓對 ${caught} / ${totalWrong} 個錯音（漏抓 ${missed} 個、誤判 ${falseAlarm} 個｜共播放 ${STATE.playCount} 次），可切換「正確原譜」或開啟解析核對喔！`;
+      `本次抓對 ${caught} / ${totalWrong} 個錯音（漏抓 ${missed} 個、誤判 ${falseAlarm} 個｜共播放 ${STATE.playCount} 次），可切換「正確原譜」核對喔！`;
   }
 
   const stampSvg = buildStampSVG(isAllCorrect, caught, totalWrong);
